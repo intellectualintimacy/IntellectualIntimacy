@@ -31,11 +31,3 @@ This project blends a clean, minimalist React frontend with a scalable Supabase 
 - **Edge Function Automation**  
   Automatically sends confirmation emails when a new subscriber joins.
 
----
-
-## 🛠️ Setup Instructions
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/<your-org>/intellectual-intimacy.git
-cd intellectual-intimacy
