@@ -16,8 +16,8 @@ export default function Home() {
       <Philosophy />
       <Values />
       <Testimonials />
-      <CTASection />
       <NewsletterForm />
+      <CTASection />
     </main>
   )
 }

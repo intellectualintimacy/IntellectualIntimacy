@@ -88,7 +88,7 @@ export default function Navigation({ darkMode, setDarkMode }) {
             )}
           </button>
 
-          {/* Contact Button */}
+          {/* User Menu */}
           <UserMenu />
         </div>
 
@@ -136,7 +136,7 @@ export default function Navigation({ darkMode, setDarkMode }) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-[280px] sm:w-[320px] bg-white dark:bg-stone-900 shadow-2xl lg:hidden z-[60] overflow-y-auto pt-[90px]"
+              className="fixed right-0 top-0 h-full w-[280px] sm:w-[320px] bg-white dark:bg-stone-900 shadow-2xl lg:hidden z-[100] overflow-y-auto pt-[90px]"
             >
               <div className="px-6 pb-10 space-y-1">
                 {navItems.map((item, index) => (
@@ -161,19 +161,13 @@ export default function Navigation({ darkMode, setDarkMode }) {
                 ))}
 
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: navItems.length * 0.1 }}
-                  className="pt-6"
-                >
-                  <Link
-                    to="/contact"
-                    className="btn-elegant w-full text-center block py-3"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Connect
-                  </Link>
-                </motion.div>
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0 }}
+                className="pb-4 mb-4 border-b border-stone-200 dark:border-stone-800"
+              >
+                <UserMenu mobile onNavigate={() => setIsMenuOpen(false)} />
+              </motion.div>
               </div>
             </motion.div>
           </>
