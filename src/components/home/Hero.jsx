@@ -71,7 +71,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl mb-6 leading-tight font-light text-white drop-shadow-2xl"
+          className="text-5xl sm:text-6xl lg:text-5xl xl:text-8xl mb-6 leading-tight font-light text-white drop-shadow-2xl"
           style={{ fontFamily: 'Crimson Pro, serif' }}
         >
           Intellectual Intimacy
