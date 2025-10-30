@@ -206,9 +206,18 @@ export default function Login() {
                   <label className="block text-sm text-stone-700 dark:text-stone-300 font-light">
                     Password
                   </label>
-                  <button type="button" className="text-xs elegant-text hover:opacity-70 transition-opacity">
-                    Forgot password?
-                  </button>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm text-stone-700 dark:text-stone-300 font-light">
+                      Password
+                    </label>
+                    <Link 
+                      to="/forgot-password" 
+                      className="text-xs elegant-text hover:opacity-70 transition-opacity"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
                 <div className="relative group">
                   <Lock className="w-5 h-5 text-stone-400 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-amber-700 dark:group-focus-within:text-amber-500 transition-colors" strokeWidth={1.5} />

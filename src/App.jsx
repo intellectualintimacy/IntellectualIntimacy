@@ -14,6 +14,10 @@ import MyTickets from "./routes/MyTickets";
 import NewsletterConfirm from "./routes/NewsletterConfirm";
 import NewsletterUnsubscribe from "./routes/NewsletterUnsubscribe";
 import ShareTestimonial from "./routes/ShareTestimonial";
+import AdminEvents from "./routes/admin/AdminEvents";
+import VerifyEmail from "./routes/VerifyEmail";
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import { supabase } from "../lib/supabase";
 import "./App.css";
 
@@ -42,6 +46,11 @@ function AppContent({ darkMode, setDarkMode }) {
         <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
         <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribe />} />
         <Route path="/share-testimonial" element={<ShareTestimonial />} />
+        <Route path="/admin/events" element={<AdminEvents />} />
+        <Route path="/admin/events" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
       </Routes>
 
       {!hideLayout && <Footer />}
