@@ -149,7 +149,7 @@ export default function Hero() {
               className="text-4xl lg:text-5xl font-light text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-300 mb-2"
               style={{ fontFamily: 'Crimson Pro, serif' }}
             >
-              9+
+              10+
             </div>
             <div className="text-xs tracking-widest uppercase text-stone-200 font-light">
               Deep Dialogues

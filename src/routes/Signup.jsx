@@ -51,8 +51,8 @@ export default function Signup() {
   ];
 
   const stats = [
-    { value: "500+", label: "Thoughtful Members" },
-    { value: "50+", label: "Transformative Events" },
+    { value: "140+", label: "Thoughtful Members" },
+    { value: "18+", label: "Transformative Events" },
     { value: "95%", label: "Member Satisfaction" }
   ];
 
