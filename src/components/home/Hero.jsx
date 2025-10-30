@@ -1,9 +1,10 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Sparkles, Play } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react' // IMPORTANT: useEffect imported here
 
 export default function Hero() {
   const heroRef = useRef(null)
+  const videoRef = useRef(null) // <-- NEW: Dedicated Ref for the video element
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
@@ -13,6 +14,21 @@ export default function Hero() {
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1])
   const [videoLoaded, setVideoLoaded] = useState(false)
 
+  // FIX: Explicitly call .play() on mount to override strict mobile policies
+  useEffect(() => {
+    if (videoRef.current) {
+      const playPromise = videoRef.current.play();
+
+      // This is necessary to catch potential errors if the browser STILL blocks it,
+      // preventing a console error, but often solves the issue.
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Playback failed (e.g., user is in low-power mode)
+        });
+      }
+    }
+  }, []); // Empty dependency array ensures this runs once on mount
+
   return (
     <section
       ref={heroRef}
@@ -21,6 +37,7 @@ export default function Hero() {
       {/* Background Video */}
       <motion.div style={{ y, scale }} className="absolute inset-0 z-0">
         <video
+          ref={videoRef} // <-- ASSIGNED NEW REF HERE
           autoPlay
           loop
           muted
