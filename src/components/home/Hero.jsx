@@ -113,13 +113,16 @@ export default function Hero() {
           transition={{ delay: 0.9, duration: 0.8 }}
           className="flex flex-col sm:flex-row gap-5 justify-center"
         >
-          <button className="group relative px-10 py-4 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium overflow-hidden transition-all hover:shadow-2xl hover:shadow-amber-500/50 hover:scale-105">
+          <a
+            href="/signup" 
+            className="group relative px-10 py-4 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium overflow-hidden transition-all hover:shadow-2xl hover:shadow-amber-500/50 hover:scale-105"
+          >
             <span className="relative z-10 flex items-center justify-center">
               Begin Your Journey
               <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={1.5} />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-          </button>
+          </a>
 
           <a
             href="https://www.youtube.com/@Intellectual-Intimacy"
