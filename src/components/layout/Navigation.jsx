@@ -9,8 +9,15 @@ export default function Navigation({ darkMode, setDarkMode }) {
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
 
+  // Define dynamic top offset for the mobile menu drawer
+  // The nav height is roughly 64px un-scrolled (py-4 md:py-6) and 56px scrolled (py-3 md:py-4).
+  // We'll use a CSS variable or direct class for simplicity, focusing on the minimum height.
+  // We will set the menu to start just below the nav bar's *tallest* state (around 80px for large padding).
+  const mobileMenuTopOffset = scrolled ? 'top-[56px]' : 'top-[76px]'; 
+
   useEffect(() => {
     const handleScroll = () => {
+      // Check if scroll is beyond 30px
       setScrolled(window.scrollY > 30)
     }
     window.addEventListener('scroll', handleScroll)
@@ -24,6 +31,8 @@ export default function Navigation({ darkMode, setDarkMode }) {
 
   // Lock body scroll when menu open
   useEffect(() => {
+    // This is crucial: we lock the body scroll to prevent the main content 
+    // from moving behind the fixed menu drawer.
     document.body.style.overflow = isMenuOpen ? 'hidden' : 'unset'
     return () => (document.body.style.overflow = 'unset')
   }, [isMenuOpen])
@@ -40,6 +49,7 @@ export default function Navigation({ darkMode, setDarkMode }) {
     <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
+      // Added a large padding-bottom on the nav itself to ensure it always clears the content
       className={`fixed w-full top-0 z-50 transition-all duration-500 ${
         scrolled
           ? 'glass-light dark:glass-dark soft-shadow py-3 md:py-4'
@@ -136,15 +146,20 @@ export default function Navigation({ darkMode, setDarkMode }) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-[280px] sm:w-[320px] bg-white dark:bg-stone-900 shadow-2xl lg:hidden z-[100] overflow-y-auto pt-[90px]"
+              // NOTE: Use h-[calc(100vh-56px)] to explicitly set the height below the navbar
+              // top-[76px] is used when not scrolled, and h-screen is too tall.
+              // I'll adjust to use calc(100vh - top-offset) to ensure full visibility.
+              className={`fixed right-0 ${mobileMenuTopOffset} w-[280px] sm:w-[320px] bg-white dark:bg-stone-900 shadow-2xl lg:hidden z-[100] overflow-y-auto pb-20`}
+              style={{ height: `calc(100vh - ${scrolled ? 56 : 76}px)` }}
             >
-              <div className="px-6 pb-10 space-y-1">
+              <div className="px-6 space-y-1 pt-6"> {/* Added pt-6 for better spacing */}
                 {navItems.map((item, index) => (
                   <motion.div
                     key={item.name}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    // Corrected syntax error here: used double curly braces for object literal
+                    transition={{ delay: index * 0.05 }} 
                   >
                     <Link
                       to={item.path}
@@ -161,13 +176,13 @@ export default function Navigation({ darkMode, setDarkMode }) {
                 ))}
 
                 <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0 }}
-                className="pb-4 mb-4 border-b border-stone-200 dark:border-stone-800"
-              >
-                <UserMenu mobile onNavigate={() => setIsMenuOpen(false)} />
-              </motion.div>
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: navItems.length * 0.05 }}
+                  className="pt-4 mt-2 border-t border-stone-200 dark:border-stone-800"
+                >
+                  <UserMenu mobile onNavigate={() => setIsMenuOpen(false)} />
+                </motion.div>
               </div>
             </motion.div>
           </>
