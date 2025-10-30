@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { Loader2, User, Mail, Lock, Sparkles, Heart, Lightbulb, Target } from "lucide-react";
+import { Loader2, User, Mail, Lock, Sparkles, Heart, Lightbulb, Target, Sun, Moon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function Signup() {
@@ -11,6 +11,17 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   async function handleSignup(e) {
     e.preventDefault();
@@ -57,7 +68,16 @@ export default function Signup() {
   ];
 
   return (
-    <main className="min-h-screen flex bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900">
+    <main className="min-h-screen flex bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900 relative">
+      
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        className="absolute top-6 right-6 p-2 rounded-full border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
+        aria-label="Toggle Dark Mode"
+      >
+        {darkMode ? <Sun className="w-5 h-5 text-stone-100" /> : <Moon className="w-5 h-5 text-stone-800" />}
+      </button>
+      
       {/* Left Brand Section */}
       <motion.div 
         initial={{ opacity: 0, x: -50 }}
