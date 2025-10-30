@@ -14,6 +14,7 @@ import MyTickets from './routes/MyTickets'
 import { supabase } from "../lib/supabase";
 import NewsletterConfirm from './routes/NewsletterConfirm'
 import NewsletterUnsubscribe from './routes/NewsletterUnsubscribe'
+import ShareTestimonial from './routes/ShareTestimonial'
 import './App.css'
 
 function App() {
@@ -63,6 +64,7 @@ function App() {
           <Route path="/my-tickets" element={<MyTickets />} />
           <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
           <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribe />} />
+          <Route path="/share-testimonial" element={<ShareTestimonial /> } />
         </Routes>
         <Footer />
       </div>
