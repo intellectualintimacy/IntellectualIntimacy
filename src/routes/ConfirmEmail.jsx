@@ -1,4 +1,4 @@
-// src/pages/ConfirmEmail.jsx
+// src/pages/ConfirmEmail.jsx - FIXED VERSION
 import { motion } from "framer-motion";
 import { CheckCircle, Loader2, XCircle, Sparkles, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,23 +12,12 @@ export default function ConfirmEmail() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Check if email is already confirmed via hash params
-    checkEmailConfirmation();
-  }, []);
-
-  async function checkEmailConfirmation() {
-    try {
-      // Supabase automatically handles the token from URL
-      const { data: { session }, error } = await supabase.auth.getSession();
-
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
-      }
-
-      if (session) {
-        // Email confirmed successfully
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event); // Debug log
+      
+      if (event === 'SIGNED_IN' && session) {
+        // User successfully confirmed email and signed in
         setConfirmed(true);
         setLoading(false);
         
@@ -36,12 +25,75 @@ export default function ConfirmEmail() {
         setTimeout(() => {
           navigate("/events");
         }, 3000);
-      } else {
-        // Still waiting for confirmation or invalid link
-        setError("Invalid or expired confirmation link");
+      } else if (event === 'USER_UPDATED') {
+        // Email confirmation processed
+        checkConfirmation();
+      }
+    });
+
+    // Also check immediately in case user is already confirmed
+    checkConfirmation();
+
+    // Cleanup listener
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [navigate]);
+
+  async function checkConfirmation() {
+    try {
+      // Check current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setError(sessionError.message);
         setLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        // Check if email is confirmed
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          console.error('User error:', userError);
+          setError(userError.message);
+          setLoading(false);
+          return;
+        }
+
+        if (user && user.email_confirmed_at) {
+          // Email is confirmed
+          setConfirmed(true);
+          setLoading(false);
+          
+          // Redirect to events page after 3 seconds
+          setTimeout(() => {
+            navigate("/events");
+          }, 3000);
+        } else {
+          // Still processing or not confirmed
+          // Wait a bit and check again
+          setTimeout(() => {
+            checkConfirmation();
+          }, 2000);
+        }
+      } else {
+        // No session yet, keep waiting
+        setTimeout(() => {
+          const timeoutCheck = async () => {
+            const { data: { session: newSession } } = await supabase.auth.getSession();
+            if (!newSession && loading) {
+              setError("Invalid or expired confirmation link. Please try again.");
+              setLoading(false);
+            }
+          };
+          timeoutCheck();
+        }, 10000); // 10 second timeout
       }
     } catch (err) {
+      console.error('Confirmation error:', err);
       setError("An error occurred during confirmation");
       setLoading(false);
     }
@@ -64,6 +116,9 @@ export default function ConfirmEmail() {
           </h2>
           <p className="text-stone-600 dark:text-stone-400 font-light">
             Please wait while we verify your account...
+          </p>
+          <p className="text-stone-500 dark:text-stone-500 text-xs mt-4 font-light">
+            This usually takes a few seconds
           </p>
         </motion.div>
       </main>
