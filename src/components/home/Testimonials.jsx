@@ -235,7 +235,7 @@ export default function Testimonials() {
         >
           <a
             href="/share-testimonial"
-            className="inline-block px-8 py-4 bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-sm uppercase tracking-wider font-light hover:bg-stone-700 dark:hover:bg-stone-200 transition-colors rounded-full"
+            className="inline-block px-8 py-4 bg-stone-800 dark:bg-stone-100 text-white dark:text-stone-900 text-sm uppercase tracking-wider font-light hover:bg-stone-700 dark:hover:bg-stone-200 transition-colors"
           >
             Share Your Story
           </a>
