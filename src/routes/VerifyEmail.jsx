@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 // NOTE: You must ensure your Supabase client object is available here.
 // Replace this import path with wherever you initialize your client.
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 export default function VerifyEmail({ supabase }) { 
   const [message, setMessage] = useState('Verifying subscription...');

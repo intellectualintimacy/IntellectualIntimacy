@@ -207,10 +207,7 @@ export default function Login() {
                     Password
                   </label>
 
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm text-stone-700 dark:text-stone-300 font-light">
-                      Password
-                    </label>
+                  <div className="flex items-center justify-between">
                     <Link 
                       to="/forgot-password" 
                       className="text-xs elegant-text hover:opacity-70 transition-opacity"

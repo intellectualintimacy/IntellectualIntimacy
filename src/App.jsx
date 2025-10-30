@@ -16,8 +16,8 @@ import NewsletterUnsubscribe from "./routes/NewsletterUnsubscribe";
 import ShareTestimonial from "./routes/ShareTestimonial";
 import AdminEvents from "./routes/admin/AdminEvents";
 import VerifyEmail from "./routes/VerifyEmail";
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+import ForgotPassword from './routes/ForgotPassword';
+import ResetPassword from './routes/ResetPassword';
 import { supabase } from "../lib/supabase";
 import "./App.css";
 
