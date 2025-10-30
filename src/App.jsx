@@ -14,7 +14,7 @@ import MyTickets from "./routes/MyTickets";
 import NewsletterConfirm from "./routes/NewsletterConfirm";
 import NewsletterUnsubscribe from "./routes/NewsletterUnsubscribe";
 import ShareTestimonial from "./routes/ShareTestimonial";
-import AdminEvents from "./routes/admin/AdminEvents";
+import AdminDashboard from "./routes/admin/AdminDashboard";
 import ForgotPassword from './routes/ForgotPassword';
 import ResetPassword from './routes/ResetPassword';
 import ConfirmEmail from './routes/ConfirmEmail';
@@ -26,7 +26,7 @@ function AppContent({ darkMode, setDarkMode }) {
   const location = useLocation();
 
   // Hide header/footer on specific routes
-  const hideLayoutRoutes = ["/login", "/signup", "/forgot-password", "/reset-password"];
+  const hideLayoutRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/admin/events"];
   const hideLayout = hideLayoutRoutes.includes(location.pathname);
 
   return (
@@ -46,7 +46,7 @@ function AppContent({ darkMode, setDarkMode }) {
         <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
         <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribe />} />
         <Route path="/share-testimonial" element={<ShareTestimonial />} />
-        <Route path="/admin/events" element={<AdminEvents />} />
+        <Route path="/admin/events" element={<AdminDashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
