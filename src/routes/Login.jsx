@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Loader2, Lock, Mail, Brain, Sparkles, Users, MessageCircle } from "lucide-react";
+import { Loader2, Lock, Mail, Sparkles, BookOpen, MessageCircle, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -39,94 +39,93 @@ export default function Login() {
 
   const features = [
     {
-      icon: Brain,
+      icon: BookOpen,
       title: "Curated Conversations",
-      description: "Engage in thought-provoking discussions with like-minded individuals"
+      description: "Thoughtfully designed dialogues that explore life's profound questions"
     },
     {
       icon: Users,
       title: "Intimate Gatherings",
-      description: "Small, focused events designed for meaningful connections"
+      description: "Small, intentional spaces for authentic human connection"
     },
     {
       icon: MessageCircle,
-      title: "Deep Dialogue",
-      description: "Move beyond small talk into conversations that matter"
+      title: "Intellectual Depth",
+      description: "Where curiosity meets vulnerability in transformative exchange"
     }
   ];
 
   return (
-    <section className="min-h-screen flex bg-gradient-to-br from-stone-950 via-stone-900 to-amber-950/20">
+    <main className="min-h-screen flex bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900">
       {/* Left Brand Section */}
       <motion.div 
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 1, ease: "easeOut" }}
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
       >
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 90, 0],
-              opacity: [0.1, 0.2, 0.1]
-            }}
-            transition={{ duration: 20, repeat: Infinity }}
-            className="absolute top-20 left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              scale: [1.2, 1, 1.2],
-              rotate: [90, 0, 90],
-              opacity: [0.1, 0.15, 0.1]
-            }}
-            transition={{ duration: 25, repeat: Infinity }}
-            className="absolute bottom-20 right-20 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl"
-          />
+        {/* Elegant Background Pattern */}
+        <div className="absolute inset-0 opacity-5 dark:opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, #a8a29e 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }} />
         </div>
 
+        {/* Subtle Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50/30 via-transparent to-stone-100/30 dark:from-amber-950/10 dark:via-transparent dark:to-stone-900/30" />
+
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16 py-20 text-white">
+        <div className="relative z-10 flex flex-col justify-center px-16 py-20">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center">
-                <Sparkles className="w-7 h-7" />
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-12">
+              <div className="icon-elegant">
+                <Sparkles className="w-6 h-6" strokeWidth={1.5} />
               </div>
-              <h2 className="text-2xl font-light">Intellectual Intimacy</h2>
+              <span className="text-xl font-light text-stone-800 dark:text-stone-100" style={{ fontFamily: 'Crimson Pro, serif' }}>
+                Intellectual Intimacy
+              </span>
             </div>
 
-            <h1 className="text-5xl font-light mb-6 leading-tight">
+            {/* Main Heading */}
+            <h1 className="text-5xl lg:text-6xl font-light mb-6 leading-tight text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
               Welcome Back to
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600 font-normal">
-                Meaningful Connections
+              <span className="block elegant-text mt-2">
+                Meaningful Dialogue
               </span>
             </h1>
 
-            <p className="text-xl text-stone-400 mb-12 leading-relaxed">
-              Where depth meets dialogue, and curiosity finds community.
+            <div className="elegant-divider my-8"></div>
+
+            <p className="text-lg text-stone-600 dark:text-stone-300 mb-12 leading-relaxed font-light max-w-md">
+              Where depth meets discourse, and curiosity cultivates connection.
             </p>
 
-            {/* Feature Cards */}
-            <div className="space-y-6">
+            {/* Feature List */}
+            <div className="space-y-8">
               {features.map((feature, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  className="flex items-start gap-4 group"
+                  transition={{ delay: 0.5 + index * 0.15, duration: 0.8 }}
+                  className="flex items-start gap-4"
                 >
-                  <div className="w-12 h-12 bg-stone-800/50 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-amber-500/20 transition-colors duration-300 border border-stone-700/50">
-                    <feature.icon className="w-6 h-6 text-amber-500" />
+                  <div className="icon-elegant mt-1">
+                    <feature.icon className="w-5 h-5" strokeWidth={1.5} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1">{feature.title}</h3>
-                    <p className="text-stone-400 text-sm leading-relaxed">{feature.description}</p>
+                    <h3 className="text-lg font-light mb-1 text-stone-800 dark:text-stone-100" style={{ fontFamily: 'Crimson Pro, serif' }}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-stone-600 dark:text-stone-400 text-sm leading-relaxed font-light">
+                      {feature.description}
+                    </p>
                   </div>
                 </motion.div>
               ))}
@@ -144,52 +143,61 @@ export default function Login() {
           className="w-full max-w-md"
         >
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="lg:hidden flex items-center gap-3 mb-10 justify-center">
+            <div className="icon-elegant">
+              <Sparkles className="w-5 h-5" strokeWidth={1.5} />
             </div>
-            <h2 className="text-xl font-light text-white">Intellectual Intimacy</h2>
+            <span className="text-lg font-light text-stone-800 dark:text-stone-100" style={{ fontFamily: 'Crimson Pro, serif' }}>
+              Intellectual Intimacy
+            </span>
           </div>
 
-          <div className="bg-stone-800/40 backdrop-blur-2xl rounded-3xl p-10 shadow-2xl border border-stone-700/50">
-            <div className="mb-8">
-              <h1 className="text-3xl font-light text-white mb-2">
-                Sign In
+          <div className="feature-card p-10">
+            <div className="text-center mb-10">
+              <div className="elegant-divider mb-6"></div>
+              <h1 className="text-4xl font-light text-stone-900 dark:text-stone-50 mb-3" style={{ fontFamily: 'Crimson Pro, serif' }}>
+                Sign <span className="elegant-text">In</span>
               </h1>
-              <p className="text-stone-400 text-sm">Enter your credentials to continue</p>
+              <p className="text-stone-600 dark:text-stone-400 text-sm font-light">
+                Continue your journey of intellectual discovery
+              </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label className="block text-sm mb-2 text-stone-300 font-medium">Email Address</label>
+                <label className="block text-sm mb-3 text-stone-700 dark:text-stone-300 font-light">
+                  Email Address
+                </label>
                 <div className="relative group">
-                  <Mail className="w-5 h-5 text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-amber-500 transition-colors" />
+                  <Mail className="w-5 h-5 text-stone-400 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-amber-700 dark:group-focus-within:text-amber-500 transition-colors" strokeWidth={1.5} />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-stone-900/50 border border-stone-700/50 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-stone-500 outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                    className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none pl-12 pr-4 py-4 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
                     placeholder="you@example.com"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm text-stone-300 font-medium">Password</label>
-                  <button type="button" className="text-xs text-amber-500 hover:text-amber-400 transition-colors">
-                    Forgot?
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm text-stone-700 dark:text-stone-300 font-light">
+                    Password
+                  </label>
+                  <button type="button" className="text-xs elegant-text hover:opacity-70 transition-opacity">
+                    Forgot password?
                   </button>
                 </div>
                 <div className="relative group">
-                  <Lock className="w-5 h-5 text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-amber-500 transition-colors" />
+                  <Lock className="w-5 h-5 text-stone-400 dark:text-stone-500 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-amber-700 dark:group-focus-within:text-amber-500 transition-colors" strokeWidth={1.5} />
                   <input
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-stone-900/50 border border-stone-700/50 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-stone-500 outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                    className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none pl-12 pr-4 py-4 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
                     placeholder="••••••••"
                   />
                 </div>
@@ -199,36 +207,38 @@ export default function Login() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-500/10 border border-red-500/30 rounded-xl p-3"
+                  className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 p-4"
                 >
-                  <p className="text-red-400 text-sm text-center">{error}</p>
+                  <p className="text-red-700 dark:text-red-400 text-sm text-center font-light">{error}</p>
                 </motion.div>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 transition-all duration-300 flex justify-center items-center font-medium text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-4 bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-stone-200 text-white dark:text-stone-900 transition-colors duration-300 flex justify-center items-center font-light disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <Loader2 className="animate-spin w-5 h-5" />
+                  <Loader2 className="animate-spin w-5 h-5" strokeWidth={1.5} />
                 ) : (
                   "Sign In"
                 )}
               </button>
 
-              <div className="relative my-8">
+              <div className="relative my-10">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-stone-700/50"></div>
+                  <div className="w-full border-t border-stone-200 dark:border-stone-700"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-stone-800/40 text-stone-400">New to Intellectual Intimacy?</span>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-4 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 font-light uppercase tracking-wider">
+                    New Member
+                  </span>
                 </div>
               </div>
 
               <Link
                 to="/signup"
-                className="block w-full py-4 rounded-xl bg-stone-700/30 hover:bg-stone-700/50 transition-all duration-300 text-center font-medium text-white border border-stone-600/50"
+                className="block w-full py-4 border border-stone-300 dark:border-stone-600 hover:border-stone-900 dark:hover:border-stone-300 transition-colors duration-300 text-center font-light text-stone-900 dark:text-stone-100"
               >
                 Create Account
               </Link>
@@ -236,6 +246,6 @@ export default function Login() {
           </div>
         </motion.div>
       </div>
-    </section>
+    </main>
   );
 }
