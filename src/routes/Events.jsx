@@ -257,34 +257,93 @@ const handleReserveSpot = async (event) => {
     }
   };
 
-    const downloadTicketPDF = async () => {
+  const downloadTicketPDF = async () => {
     if (!ticketRef.current || !ticketData) return;
     
     setDownloadingTicket(true);
     
     try {
-      const canvas = await html2canvas(ticketRef.current, {
+      // Create a temporary container for the ticket
+      const tempContainer = document.createElement('div');
+      tempContainer.style.cssText = `
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 595px;
+        background: white;
+        padding: 40px;
+      `;
+      document.body.appendChild(tempContainer);
+
+      // Clone the ticket and optimize for PDF
+      const ticketClone = ticketRef.current.cloneNode(true);
+      ticketClone.style.cssText = `
+        width: 515px;
+        margin: 0 auto;
+        transform: scale(1);
+      `;
+      tempContainer.appendChild(ticketClone);
+
+      // Wait for fonts and images to load
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Generate canvas with optimized settings
+      const canvas = await html2canvas(tempContainer, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 595,
+        windowWidth: 595,
+        onclone: (clonedDoc) => {
+          const clonedTicket = clonedDoc.querySelector('[ref="ticket"]');
+          if (clonedTicket) {
+            clonedTicket.style.fontSize = '14px';
+          }
+        }
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      // Remove temporary container
+      document.body.removeChild(tempContainer);
+
+      const imgData = canvas.toDataURL('image/png', 0.95);
+      
+      // Create PDF with A4 dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      // A4 dimensions: 210mm x 297mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+      
+      // Calculate ticket dimensions (max 180mm wide, maintain aspect ratio)
+      const maxTicketWidth = 180;
+      const ticketAspectRatio = canvas.height / canvas.width;
+      const ticketWidth = maxTicketWidth;
+      const ticketHeight = ticketWidth * ticketAspectRatio;
+      
+      // Center horizontally and position in upper half
+      const xPosition = (pdfWidth - ticketWidth) / 2;
+      const yPosition = 30; // 30mm from top
 
-      pdf.addImage(imgData, 'PNG', 0, 20, pdfWidth, pdfHeight);
+      // Add ticket image to PDF
+      pdf.addImage(imgData, 'PNG', xPosition, yPosition, ticketWidth, ticketHeight, '', 'FAST');
+      
+      // Add footer text
+      const footerY = yPosition + ticketHeight + 15;
+      pdf.setFontSize(9);
+      pdf.setTextColor(120, 113, 108);
+      pdf.text('Intellectual Intimacy - Event Ticket', pdfWidth / 2, footerY, { align: 'center' });
+      pdf.text(`Generated on ${new Date().toLocaleDateString('en-ZA')}`, pdfWidth / 2, footerY + 5, { align: 'center' });
+      
+      // Save PDF
       pdf.save(`ticket-${ticketData.ticketId}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate ticket PDF. Please try again.');
+      alert('Failed to generate ticket PDF. Please try screenshot the ticket instead.');
     } finally {
       setDownloadingTicket(false);
     }
@@ -1136,97 +1195,108 @@ const submitReservation = async (e) => {
                   </div>
 
                   {/* Digital Ticket */}
-                  <div ref={ticketRef} className="bg-gradient-to-br from-stone-50 to-stone-100 dark:from-stone-800 dark:to-stone-900 rounded-2xl border-2 border-stone-200 dark:border-stone-700 overflow-hidden mb-6">
+                  <div 
+                    ref={ticketRef} 
+                    className="bg-white dark:bg-stone-900 rounded-2xl border-2 border-stone-300 dark:border-stone-700 overflow-hidden mb-6 max-w-2xl mx-auto"
+                  >
                     {/* Ticket Header */}
-                    <div className="bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700 p-6 text-white">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Ticket className="w-8 h-8" strokeWidth={1.5} />
-                        <h3 className="text-2xl font-light" style={{ fontFamily: "'Crimson Pro', serif" }}>
+                    <div className="bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-600 dark:to-amber-700 p-4 sm:p-6 text-white">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                        <Ticket className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0" strokeWidth={1.5} />
+                        <h3 className="text-xl sm:text-2xl font-light" style={{ fontFamily: "'Crimson Pro', serif" }}>
                           Event Ticket
                         </h3>
                       </div>
-                      <p className="text-amber-100 text-sm font-light">Present this QR code at the event entrance</p>
+                      <p className="text-amber-100 text-xs sm:text-sm font-light">Present this QR code at the event entrance</p>
                     </div>
 
                     {/* Ticket Body */}
-                    <div className="p-6">
-                      <div className="grid md:grid-cols-2 gap-6">
-                        {/* Event Details */}
-                        <div className="space-y-4">
+                    <div className="p-4 sm:p-6">
+                      <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-[1fr,auto] sm:gap-6">
+                        {/* Event Details - Left Column */}
+                        <div className="space-y-3 sm:space-y-4 min-w-0">
                           <div>
-                            <h4 className="text-2xl font-light text-stone-900 dark:text-stone-100 mb-2" style={{ fontFamily: "'Crimson Pro', serif" }}>
+                            <h4 className="text-lg sm:text-xl font-light text-stone-900 dark:text-stone-100 mb-2 break-words" style={{ fontFamily: "'Crimson Pro', serif" }}>
                               {selectedEvent.title}
                             </h4>
-                            <div className="h-px bg-stone-300 dark:bg-stone-700 my-4"></div>
+                            <div className="h-px bg-stone-300 dark:bg-stone-700 my-3"></div>
                           </div>
 
-                          <div>
-                            <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
-                              Attendee
-                            </p>
-                            <p className="text-stone-900 dark:text-stone-100 font-light">
-                              {ticketData?.userName}
-                            </p>
-                          </div>
+                          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                              <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
+                                Attendee
+                              </p>
+                              <p className="text-sm text-stone-900 dark:text-stone-100 font-light truncate">
+                                {ticketData?.userName}
+                              </p>
+                            </div>
 
-                          <div>
-                            <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
-                              Date & Time
-                            </p>
-                            <p className="text-stone-900 dark:text-stone-100 font-light">
-                              {formatDate(selectedEvent.date)}
-                            </p>
-                            <p className="text-sm text-stone-600 dark:text-stone-400 font-light">
-                              {formatTime(selectedEvent.date)}
-                            </p>
-                          </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
+                                Date
+                              </p>
+                              <p className="text-sm text-stone-900 dark:text-stone-100 font-light">
+                                {new Date(selectedEvent.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
+                            </div>
 
-                          <div>
-                            <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
-                              Location
-                            </p>
-                            <p className="text-stone-900 dark:text-stone-100 font-light">
-                              {selectedEvent.location}
-                            </p>
+                            <div>
+                              <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
+                                Time
+                              </p>
+                              <p className="text-sm text-stone-900 dark:text-stone-100 font-light">
+                                {formatTime(selectedEvent.date)}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
+                                Location
+                              </p>
+                              <p className="text-sm text-stone-900 dark:text-stone-100 font-light truncate">
+                                {selectedEvent.location}
+                              </p>
+                            </div>
                           </div>
 
                           <div>
                             <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-1 font-light">
                               Ticket ID
                             </p>
-                            <p className="text-sm font-mono text-stone-900 dark:text-stone-100">
+                            <p className="text-xs sm:text-sm font-mono text-stone-900 dark:text-stone-100 break-all">
                               {ticketData?.ticketId}
                             </p>
                           </div>
                         </div>
 
-                        {/* QR Code */}
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="bg-white p-4 rounded-2xl border-2 border-stone-300 dark:border-stone-600">
+                        {/* QR Code - Right Column (responsive positioning) */}
+                        <div className="flex flex-col items-center justify-start pt-2 sm:pt-0">
+                          <div className="bg-white p-3 sm:p-4 rounded-xl border-2 border-stone-300 dark:border-stone-600">
                             {qrCodeUrl ? (
                               <img 
                                 src={qrCodeUrl} 
                                 alt="Ticket QR Code" 
-                                className="w-48 h-48"
+                                className="w-32 h-32 sm:w-40 sm:h-40"
                               />
                             ) : (
-                              <div className="w-48 h-48 flex items-center justify-center">
+                              <div className="w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center">
                                 <Loader2 className="w-8 h-8 animate-spin text-stone-400" />
                               </div>
                             )}
                           </div>
-                          <p className="text-xs text-center text-stone-500 dark:text-stone-400 mt-3 font-light">
-                            Scan this code at check-in
+                          <p className="text-xs text-center text-stone-500 dark:text-stone-400 mt-2 font-light">
+                            Scan at check-in
                           </p>
                         </div>
                       </div>
 
                       {/* Ticket Footer */}
-                      <div className="mt-6 pt-6 border-t border-stone-300 dark:border-stone-700">
+                      <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-stone-300 dark:border-stone-700">
                         <div className="flex items-start gap-2 text-xs text-stone-500 dark:text-stone-400 font-light">
-                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
-                          <p>
-                            Please arrive 15 minutes before the event starts. This ticket is non-transferable and must be presented for entry.
+                          <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+                          <p className="leading-relaxed">
+                            Please arrive 15 minutes early. This ticket is non-transferable and must be presented for entry.
                           </p>
                         </div>
                       </div>
@@ -1243,12 +1313,12 @@ const submitReservation = async (e) => {
                       {downloadingTicket ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.5} />
-                          <span>Generating PDF...</span>
+                          <span>Generating Ticket...</span>
                         </>
                       ) : (
                         <>
                           <Download className="w-5 h-5" strokeWidth={1.5} />
-                          <span>Download Ticket PDF</span>
+                          <span>Download Ticket</span>
                         </>
                       )}
                     </button>
