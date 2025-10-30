@@ -3,17 +3,16 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Moon, Sun } from 'lucide-react'
 import UserMenu from '../UserMenu';
+import useAdmin from '../../hooks/useAdmin'; 
+
 
 export default function Navigation({ darkMode, setDarkMode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const { isAdmin, checking: adminChecking } = useAdmin();
 
-  // Define dynamic top offset for the mobile menu drawer
-  // The nav height is roughly 64px un-scrolled (py-4 md:py-6) and 56px scrolled (py-3 md:py-4).
-  // We'll use a CSS variable or direct class for simplicity, focusing on the minimum height.
-  // We will set the menu to start just below the nav bar's *tallest* state (around 80px for large padding).
-  const mobileMenuTopOffset = scrolled ? 'top-[56px]' : 'top-[76px]'; 
+ const mobileMenuTopOffset = scrolled ? 'top-[56px]' : 'top-[76px]'; 
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,6 +83,12 @@ export default function Navigation({ darkMode, setDarkMode }) {
               {item.name}
             </Link>
           ))}
+
+          {isAdmin && (
+          <Link to="/admin/events" className="nav-elegant text-sm xl:text-base">
+            Admin
+          </Link>
+          )}
 
           {/* Dark mode toggle */}
           <button

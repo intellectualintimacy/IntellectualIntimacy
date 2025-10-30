@@ -1,6 +1,6 @@
 // src/hooks/useAdmin.js
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export default function useAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
