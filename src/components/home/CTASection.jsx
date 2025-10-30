@@ -102,19 +102,19 @@ export default function CTASection() {
               className="grid grid-cols-2 gap-6"
             >
               <div className="bg-white/10 backdrop-blur p-6 rounded-lg border border-white/20">
-                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>500+</div>
+                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>11K+</div>
                 <div className="text-sm opacity-90 font-light">Lives Impacted</div>
               </div>
               <div className="bg-white/10 backdrop-blur p-6 rounded-lg border border-white/20">
-                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>50+</div>
+                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>3+</div>
                 <div className="text-sm opacity-90 font-light">Events Hosted</div>
               </div>
               <div className="bg-white/10 backdrop-blur p-6 rounded-lg border border-white/20">
-                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>2K+</div>
+                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>140+</div>
                 <div className="text-sm opacity-90 font-light">Community Members</div>
               </div>
               <div className="bg-white/10 backdrop-blur p-6 rounded-lg border border-white/20">
-                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>R250K</div>
+                <div className="text-4xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>R500+</div>
                 <div className="text-sm opacity-90 font-light">Community Investment</div>
               </div>
             </motion.div>
