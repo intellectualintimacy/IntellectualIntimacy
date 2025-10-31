@@ -12,7 +12,9 @@ import UsersManagement from './UsersManagement';
 import TestimonialsManagement from './TestimonialsManagement';
 import NewsletterManagement from './NewsletterManagement';
 import AnalyticsView from './AnalyticsView';
-// import SettingsView from './SettingsView';
+import SettingsView from './SettingsView';
+
+
 
 export default function AdminLayout({ currentView, setCurrentView }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
