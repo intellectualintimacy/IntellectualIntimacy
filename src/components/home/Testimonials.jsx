@@ -1,7 +1,7 @@
 // src/components/home/Testimonials.jsx
 import { useState, useEffect, useRef } from 'react'
 import { motion, useMotionValue, useAnimation } from 'framer-motion'
-import { Heart, Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Heart, Star, Quote, ChevronLeft, ChevronRight, RefreshCw, AlertCircle } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 
 export default function Testimonials() {
@@ -20,6 +20,9 @@ export default function Testimonials() {
 
   const fetchTestimonials = async () => {
     try {
+      setLoading(true)
+      setError(null)
+      
       const { data, error: fetchError } = await supabase
         .from('testimonials')
         .select('*')
@@ -31,11 +34,13 @@ export default function Testimonials() {
       if (fetchError) throw fetchError
 
       setTestimonials(data || [])
+      setLoading(false)
     } catch (err) {
       console.error('Error fetching testimonials:', err)
-      setError('Failed to load testimonials')
-    } finally {
+      setError(err.message || 'Failed to load testimonials')
       setLoading(false)
+      // Use fallback testimonials on error
+      setTestimonials(fallbackTestimonials)
     }
   }
 
@@ -91,7 +96,7 @@ export default function Testimonials() {
   const infiniteTestimonials = [...displayTestimonials, ...displayTestimonials, ...displayTestimonials]
 
   useEffect(() => {
-    if (!isPaused && infiniteTestimonials.length > 0) {
+    if (!isPaused && infiniteTestimonials.length > 0 && !loading) {
       const cardWidth = 400 // Approximate width of each card including gap
       const totalWidth = cardWidth * displayTestimonials.length
       
@@ -109,7 +114,7 @@ export default function Testimonials() {
     } else {
       controls.stop()
     }
-  }, [isPaused, controls, infiniteTestimonials.length, displayTestimonials.length])
+  }, [isPaused, controls, infiniteTestimonials.length, displayTestimonials.length, loading])
 
   const handlePrevious = () => {
     if (carouselRef.current) {
@@ -144,12 +149,50 @@ export default function Testimonials() {
         </motion.div>
 
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-12 h-12 border-2 border-stone-300 dark:border-stone-600 border-t-amber-500 rounded-full animate-spin"></div>
+          // Loading skeletons
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="testimonial-card animate-pulse">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-8 h-8 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, j) => (
+                      <div key={j} className="w-4 h-4 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                    ))}
+                  </div>
+                </div>
+                <div className="w-10 h-10 bg-stone-200 dark:bg-stone-800 rounded mb-4"></div>
+                <div className="space-y-3 mb-6">
+                  <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-full"></div>
+                  <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-5/6"></div>
+                  <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-4/6"></div>
+                </div>
+                <div className="pt-4 border-t border-stone-200 dark:border-stone-700">
+                  <div className="h-4 bg-stone-200 dark:bg-stone-800 rounded w-32 mb-2"></div>
+                  <div className="h-3 bg-stone-200 dark:bg-stone-800 rounded w-24"></div>
+                </div>
+              </div>
+            ))}
           </div>
-        ) : error ? (
-          <div className="text-center py-20">
-            <p className="text-stone-500 dark:text-stone-400 font-light">{error}</p>
+        ) : error && testimonials.length === 0 ? (
+          // Error state (only if no fallback data)
+          <div className="text-center py-20 mb-16">
+            <div className="w-16 h-16 bg-orange-100 dark:bg-orange-950/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-8 h-8 text-orange-600 dark:text-orange-400" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-2xl font-light text-stone-900 dark:text-stone-50 mb-3" style={{ fontFamily: 'Crimson Pro, serif' }}>
+              Unable to Load Testimonials
+            </h3>
+            <p className="text-stone-600 dark:text-stone-400 font-light mb-6">
+              {error}
+            </p>
+            <button
+              onClick={fetchTestimonials}
+              className="px-8 py-3 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-light inline-flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" strokeWidth={1.5} />
+              Try Again
+            </button>
           </div>
         ) : (
           <div className="relative mb-16">
@@ -192,7 +235,7 @@ export default function Testimonials() {
                     <div className="flex items-center justify-between mb-6">
                       <Heart className="w-8 h-8 text-stone-300 dark:text-stone-600 group-hover:text-amber-500 group-hover:fill-amber-500 transition-all" strokeWidth={1.5} />
                       <div className="flex gap-1">
-                        {[...Array(testimonial.rating)].map((_, i) => (
+                        {[...Array(testimonial.rating || 5)].map((_, i) => (
                           <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-500" strokeWidth={1.5} />
                         ))}
                       </div>
@@ -205,8 +248,8 @@ export default function Testimonials() {
                     </p>
                     
                     <div className="pt-4 border-t border-stone-200 dark:border-stone-700">
-                      <div className="font-medium text-stone-800 dark:text-stone-100">{testimonial.name}</div>
-                      <div className="text-sm text-stone-500 dark:text-stone-400">{testimonial.role}</div>
+                      <div className="font-light text-stone-800 dark:text-stone-100">{testimonial.name}</div>
+                      <div className="text-sm text-stone-500 dark:text-stone-400 font-light">{testimonial.role}</div>
                     </div>
                   </motion.div>
                 ))}
@@ -220,11 +263,18 @@ export default function Testimonials() {
         )}
 
         {/* Pause Indicator */}
-        <div className="text-center mb-8">
-          <p className="text-xs text-stone-400 dark:text-stone-600 font-light uppercase tracking-wider">
-            {isPaused ? '⏸ Paused' : '▶ Auto-scrolling'}  • Hover to pause
-          </p>
-        </div>
+        {!loading && (
+          <div className="text-center mb-8">
+            <p className="text-xs text-stone-400 dark:text-stone-600 font-light uppercase tracking-wider">
+              {isPaused ? '⏸ Paused' : '▶ Auto-scrolling'}  • Hover to pause
+            </p>
+            {error && testimonials.length > 0 && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 font-light mt-2">
+                Showing cached testimonials
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Call to Action */}
         <motion.div
