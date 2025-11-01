@@ -18,6 +18,7 @@ import AdminDashboard from "./routes/admin/AdminDashboard";
 import ForgotPassword from './routes/ForgotPassword';
 import ResetPassword from './routes/ResetPassword';
 import ConfirmEmail from './routes/ConfirmEmail';
+import ConnectionMonitor from './components/ConnectionMonitor'
 import { supabase } from "../lib/supabase";
 import "./App.css";
 
@@ -32,7 +33,7 @@ function AppContent({ darkMode, setDarkMode }) {
   return (
     <div className="min-h-screen transition-colors duration-500 bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-white">
       {!hideLayout && <Navigation darkMode={darkMode} setDarkMode={setDarkMode} />}
-      
+      <ConnectionMonitor />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
