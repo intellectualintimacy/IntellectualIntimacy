@@ -180,6 +180,26 @@ export default function Navigation({ darkMode, setDarkMode }) {
                   </motion.div>
                 ))}
 
+                {isAdmin && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: navItems.length * 0.05 }}
+                  >
+                    <Link
+                      to="/admin/events"
+                      className={`block py-3 px-4 rounded-lg text-base font-light transition-all ${
+                        location.pathname.startsWith('/admin')
+                          ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-medium'
+                          : 'text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin
+                    </Link>
+                  </motion.div>
+                )}
+
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
