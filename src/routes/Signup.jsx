@@ -60,6 +60,25 @@ export default function Signup() {
     }
 
     try {
+      // Check if email already exists in profiles table
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', formData.email.toLowerCase())
+        .maybeSingle();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        // PGRST116 is "no rows returned" which is what we want
+        throw profileError;
+      }
+
+      if (existingProfile) {
+        setError("An account with this email already exists. Please sign in instead.");
+        setLoading(false);
+        return;
+      }
+
+      // Attempt signup
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -72,7 +91,21 @@ export default function Signup() {
       });
 
       if (error) {
-        setError(error.message);
+        // Handle specific Supabase auth errors
+        if (error.message.includes('already registered')) {
+          setError("This email is already registered. Please sign in instead.");
+        } else if (error.message.includes('Email rate limit exceeded')) {
+          setError("Too many signup attempts. Please try again in a few minutes.");
+        } else {
+          setError(error.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Check if user was actually created (Supabase might return success even if email exists)
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError("This email is already registered. Please sign in instead.");
         setLoading(false);
         return;
       }
@@ -81,7 +114,8 @@ export default function Signup() {
       setEmailSent(true);
       setLoading(false);
     } catch (err) {
-      setError(err.message || "An error occurred");
+      console.error('Signup error:', err);
+      setError(err.message || "An error occurred during signup");
       setLoading(false);
     }
   }
@@ -392,6 +426,14 @@ export default function Signup() {
                   className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 p-4"
                 >
                   <p className="text-red-700 dark:text-red-400 text-sm text-center font-light">{error}</p>
+                  {(error.includes('already registered') || error.includes('already exists')) && (
+                    <Link
+                      to="/login"
+                      className="block text-center mt-3 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-normal underline"
+                    >
+                      Go to Sign In →
+                    </Link>
+                  )}
                 </motion.div>
               )}
 
