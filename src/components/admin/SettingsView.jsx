@@ -1,11 +1,12 @@
-// src/components/admin/SettingsView.jsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings, Globe, Bell, Shield, Palette, Database, Mail,
   Zap, Code, Save, AlertCircle, CheckCircle, Eye, EyeOff,
   Upload, Download, Trash2, RefreshCw, Lock, Key, Loader2,
-  DollarSign, CreditCard, Webhook, FileText, Image as ImageIcon
+  DollarSign, CreditCard, Webhook, FileText, Image as ImageIcon,
+  Copy, Check, X, Search, Filter as FilterIcon, Terminal, Calendar,
+  Activity, BarChart3, Clock, Users, TrendingUp
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
@@ -13,84 +14,80 @@ export default function SettingsView() {
   const [activeTab, setActiveTab] = useState('general');
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [changes, setChanges] = useState({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  // Settings state
   const [settings, setSettings] = useState({
-    // General
     siteName: 'Intellectual Intimacy',
     siteDescription: 'Building meaningful connections through deep conversation',
-    siteUrl: 'https://intellectualintimacy.co.ZA',
-    adminEmail: 'admin@intellectualintimacy.co.ZA',
+    siteUrl: 'https://intellectualintimacy.co.za',
+    adminEmail: 'admin@intellectualintimacy.co.za',
     timezone: 'Africa/Johannesburg',
     language: 'en',
-    
-    // Appearance
     primaryColor: '#d97706',
     accentColor: '#e11d48',
     fontFamily: 'Crimson Pro',
     darkMode: 'auto',
-    
-    // Notifications
     emailNotifications: true,
     newReservationAlert: true,
     newUserAlert: true,
     weeklyReport: true,
     monthlyReport: true,
-    
-    // Events
     defaultCapacity: 50,
     defaultDuration: 120,
     allowWaitlist: true,
     autoConfirm: false,
     cancellationDays: 7,
-    
-    // Payments
     currency: 'ZAR',
     taxRate: 15,
-    paymentGateway: 'stripe',
-    testMode: true,
-    
-    // Email
-    smtpHost: '',
-    smtpPort: 587,
-    smtpUser: '',
-    smtpPassword: '',
-    fromEmail: 'noreply@intellectualintimacy.com',
-    fromName: 'Intellectual Intimacy',
-    
-    // Advanced
     maintenanceMode: false,
     allowRegistration: true,
     requireEmailVerification: true,
     sessionTimeout: 30,
     maxFileSize: 5,
-    enableAnalytics: true,
-    googleAnalyticsId: '',
-    
-    // API
-    apiEnabled: true,
-    webhookUrl: '',
-    apiRateLimit: 100
+    enableAnalytics: true
   });
 
-  const tabs = [
-    { id: 'general', label: 'General', icon: Globe },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'events', label: 'Events', icon: Settings },
-    { id: 'payments', label: 'Payments', icon: DollarSign },
-    { id: 'email', label: 'Email', icon: Mail },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'advanced', label: 'Advanced', icon: Zap },
-    { id: 'api', label: 'API & Webhooks', icon: Code }
-  ];
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    setHasUnsavedChanges(Object.keys(changes).length > 0);
+  }, [changes]);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      // Load settings from Supabase or localStorage
+      const stored = localStorage.getItem('app_settings');
+      if (stored) {
+        setSettings(JSON.parse(stored));
+      }
+    } catch (err) {
+      console.error('Error loading settings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSettingChange = (key, value) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    setChanges(prev => ({ ...prev, [key]: value }));
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Simulate save to database or configuration
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Save to localStorage (or Supabase in production)
+      localStorage.setItem('app_settings', JSON.stringify(settings));
       
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setChanges({});
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -109,6 +106,7 @@ export default function SettingsView() {
     a.href = url;
     a.download = `settings-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleImportSettings = (event) => {
@@ -120,6 +118,7 @@ export default function SettingsView() {
       try {
         const imported = JSON.parse(e.target.result);
         setSettings({ ...settings, ...imported });
+        setChanges(imported);
         alert('Settings imported successfully!');
       } catch (err) {
         alert('Invalid settings file');
@@ -127,6 +126,34 @@ export default function SettingsView() {
     };
     reader.readAsText(file);
   };
+
+  const handleDiscardChanges = () => {
+    if (!window.confirm('Discard all unsaved changes?')) return;
+    loadSettings();
+    setChanges({});
+  };
+
+  const tabs = [
+    { id: 'general', label: 'General', icon: Globe, count: null },
+    { id: 'appearance', label: 'Appearance', icon: Palette, count: null },
+    { id: 'notifications', label: 'Notifications', icon: Bell, count: Object.values(settings).filter(v => typeof v === 'boolean' && v && settings.emailNotifications).length },
+    { id: 'events', label: 'Events', icon: Calendar, count: null },
+    { id: 'security', label: 'Security', icon: Shield, count: null },
+    { id: 'advanced', label: 'Advanced', icon: Zap, count: null },
+    { id: 'integrations', label: 'Integrations', icon: Code, count: null }
+  ];
+
+  const filteredTabs = tabs.filter(tab => 
+    tab.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-stone-400" strokeWidth={1.5} />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -138,35 +165,49 @@ export default function SettingsView() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
-            Settings & Configuration
+          <h2 className="text-4xl font-light mb-2 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+            Settings & <span className="elegant-text">Configuration</span>
           </h2>
-          <p className="text-stone-600 dark:text-stone-400">
+          <p className="text-stone-600 dark:text-stone-400 font-light">
             Customize your platform and manage configurations
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <label className="px-4 py-2 border border-stone-200 dark:border-stone-800 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 cursor-pointer inline-flex items-center gap-2">
-            <Upload className="w-5 h-5" /> Import
+          {hasUnsavedChanges && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 font-light text-sm">
+              <AlertCircle className="w-4 h-4" strokeWidth={1.5} />
+              {Object.keys(changes).length} unsaved changes
+            </div>
+          )}
+          <label className="px-4 py-2 border border-stone-300 dark:border-stone-600 hover:border-stone-900 dark:hover:border-stone-300 cursor-pointer inline-flex items-center gap-2 font-light transition-colors">
+            <Upload className="w-5 h-5" strokeWidth={1.5} /> Import
             <input type="file" accept=".json" onChange={handleImportSettings} className="hidden" />
           </label>
           <button
             onClick={handleExportSettings}
-            className="px-4 py-2 border border-stone-200 dark:border-stone-800 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 inline-flex items-center gap-2"
+            className="px-4 py-2 border border-stone-300 dark:border-stone-600 hover:border-stone-900 dark:hover:border-stone-300 inline-flex items-center gap-2 font-light transition-colors"
           >
-            <Download className="w-5 h-5" /> Export
+            <Download className="w-5 h-5" strokeWidth={1.5} /> Export
           </button>
+          {hasUnsavedChanges && (
+            <button
+              onClick={handleDiscardChanges}
+              className="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 inline-flex items-center gap-2 font-light transition-colors"
+            >
+              <X className="w-5 h-5" strokeWidth={1.5} /> Discard
+            </button>
+          )}
           <button
             onClick={handleSave}
-            disabled={saving}
-            className="px-6 py-2 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-xl hover:scale-105 transition-transform inline-flex items-center gap-2 disabled:opacity-50"
+            disabled={saving || !hasUnsavedChanges}
+            className="px-6 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-light"
           >
             {saving ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.5} />
             ) : saveSuccess ? (
-              <CheckCircle className="w-5 h-5" />
+              <CheckCircle className="w-5 h-5" strokeWidth={1.5} />
             ) : (
-              <Save className="w-5 h-5" />
+              <Save className="w-5 h-5" strokeWidth={1.5} />
             )}
             {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Changes'}
           </button>
@@ -175,24 +216,66 @@ export default function SettingsView() {
 
       <div className="flex gap-6">
         {/* Sidebar Navigation */}
-        <div className="w-64 flex-shrink-0">
-          <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-4 sticky top-8">
+        <div className="w-72 flex-shrink-0">
+          <div className="feature-card p-4 sticky top-8">
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" strokeWidth={1.5} />
+              <input
+                type="text"
+                placeholder="Search settings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-stone-200 dark:border-stone-700 rounded-none focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light text-sm bg-white dark:bg-stone-950"
+              />
+            </div>
+
             <nav className="space-y-1">
-              {tabs.map(tab => (
+              {filteredTabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${
+                  className={`w-full flex items-center justify-between px-4 py-3 transition-all text-left font-light ${
                     activeTab === tab.id
-                      ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-900'
+                      ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
                       : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300'
                   }`}
                 >
-                  <tab.icon className="w-5 h-5" />
-                  <span className="font-light">{tab.label}</span>
+                  <div className="flex items-center gap-3">
+                    <tab.icon className="w-5 h-5" strokeWidth={1.5} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {tab.count !== null && (
+                    <span className={`px-2 py-0.5 text-xs ${
+                      activeTab === tab.id
+                        ? 'bg-white/20 text-white dark:bg-stone-900/20 dark:text-stone-900'
+                        : 'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-400'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
+
+            {/* Quick Stats */}
+            <div className="mt-6 pt-6 border-t border-stone-200 dark:border-stone-700 space-y-3">
+              <div className="text-xs font-light text-stone-600 dark:text-stone-400 mb-3">SYSTEM STATUS</div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-stone-600 dark:text-stone-400 font-light">Storage</span>
+                <span className="font-light text-stone-900 dark:text-stone-50">1.2GB / 10GB</span>
+              </div>
+              <div className="h-1 bg-stone-200 dark:bg-stone-800 overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: '12%' }} />
+              </div>
+              <div className="flex items-center justify-between text-sm mt-3">
+                <span className="text-stone-600 dark:text-stone-400 font-light">API Calls</span>
+                <span className="font-light text-stone-900 dark:text-stone-50">847 / 10K</span>
+              </div>
+              <div className="h-1 bg-stone-200 dark:bg-stone-800 overflow-hidden">
+                <div className="h-full bg-blue-500" style={{ width: '8.47%' }} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -200,31 +283,60 @@ export default function SettingsView() {
         <div className="flex-1">
           <AnimatePresence mode="wait">
             {activeTab === 'general' && (
-              <GeneralSettings key="general" settings={settings} setSettings={setSettings} />
+              <GeneralSettings 
+                key="general" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
             {activeTab === 'appearance' && (
-              <AppearanceSettings key="appearance" settings={settings} setSettings={setSettings} />
+              <AppearanceSettings 
+                key="appearance" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
             {activeTab === 'notifications' && (
-              <NotificationSettings key="notifications" settings={settings} setSettings={setSettings} />
+              <NotificationSettings 
+                key="notifications" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
             {activeTab === 'events' && (
-              <EventSettings key="events" settings={settings} setSettings={setSettings} />
-            )}
-            {activeTab === 'payments' && (
-              <PaymentSettings key="payments" settings={settings} setSettings={setSettings} />
-            )}
-            {activeTab === 'email' && (
-              <EmailSettings key="email" settings={settings} setSettings={setSettings} />
+              <EventSettings 
+                key="events" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
             {activeTab === 'security' && (
-              <SecuritySettings key="security" settings={settings} setSettings={setSettings} />
+              <SecuritySettings 
+                key="security" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
             {activeTab === 'advanced' && (
-              <AdvancedSettings key="advanced" settings={settings} setSettings={setSettings} />
+              <AdvancedSettings 
+                key="advanced" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
-            {activeTab === 'api' && (
-              <APISettings key="api" settings={settings} setSettings={setSettings} />
+            {activeTab === 'integrations' && (
+              <IntegrationsSettings 
+                key="integrations" 
+                settings={settings} 
+                onChange={handleSettingChange}
+                changes={changes}
+              />
             )}
           </AnimatePresence>
         </div>
@@ -234,68 +346,81 @@ export default function SettingsView() {
 }
 
 // General Settings Component
-function GeneralSettings({ settings, setSettings }) {
+function GeneralSettings({ settings, onChange, changes }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        General Settings
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        General <span className="elegant-text">Settings</span>
       </h3>
       
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Site Name</label>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Site Name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={settings.siteName}
-            onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            onChange={(e) => onChange('siteName', e.target.value)}
+            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
           />
+          {changes.siteName && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-light">Unsaved change</p>
+          )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Site Description</label>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Site Description
+          </label>
           <textarea
             value={settings.siteDescription}
-            onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
+            onChange={(e) => onChange('siteDescription', e.target.value)}
             rows={3}
-            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light resize-none"
           />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Site URL</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Site URL
+            </label>
             <input
               type="url"
               value={settings.siteUrl}
-              onChange={(e) => setSettings({ ...settings, siteUrl: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              onChange={(e) => onChange('siteUrl', e.target.value)}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Admin Email</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Admin Email
+            </label>
             <input
               type="email"
               value={settings.adminEmail}
-              onChange={(e) => setSettings({ ...settings, adminEmail: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              onChange={(e) => onChange('adminEmail', e.target.value)}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             />
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Timezone</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Timezone
+            </label>
             <select
               value={settings.timezone}
-              onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              onChange={(e) => onChange('timezone', e.target.value)}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             >
               <option value="Africa/Johannesburg">Africa/Johannesburg (SAST)</option>
               <option value="Europe/London">Europe/London (GMT)</option>
@@ -306,11 +431,13 @@ function GeneralSettings({ settings, setSettings }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Language</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Language
+            </label>
             <select
               value={settings.language}
-              onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              onChange={(e) => onChange('language', e.target.value)}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             >
               <option value="en">English</option>
               <option value="af">Afrikaans</option>
@@ -320,11 +447,11 @@ function GeneralSettings({ settings, setSettings }) {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-900 dark:text-blue-200">
-              <strong>Tip:</strong> Changes to site name and URL will affect how your platform appears to users and in search engines.
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/20">
+            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+            <div className="text-sm text-blue-900 dark:text-blue-200 font-light">
+              <strong className="font-medium">Tip:</strong> Changes to site name and URL will affect how your platform appears to users and in search engines.
             </div>
           </div>
         </div>
@@ -334,63 +461,99 @@ function GeneralSettings({ settings, setSettings }) {
 }
 
 // Appearance Settings Component
-function AppearanceSettings({ settings, setSettings }) {
+function AppearanceSettings({ settings, onChange, changes }) {
+  const [copied, setCopied] = useState('');
+
+  const copyColor = (color) => {
+    navigator.clipboard.writeText(color);
+    setCopied(color);
+    setTimeout(() => setCopied(''), 2000);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Appearance & Branding
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        Appearance & <span className="elegant-text">Branding</span>
       </h3>
       
       <div className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Primary Color</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Primary Color
+            </label>
             <div className="flex gap-3">
               <input
                 type="color"
                 value={settings.primaryColor}
-                onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
-                className="w-20 h-12 rounded-xl border border-stone-200 dark:border-stone-800 cursor-pointer"
+                onChange={(e) => onChange('primaryColor', e.target.value)}
+                className="w-20 h-12 border border-stone-200 dark:border-stone-700 cursor-pointer"
               />
-              <input
-                type="text"
-                value={settings.primaryColor}
-                onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
-                className="flex-1 px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
-              />
+              <div className="flex-1 flex gap-2">
+                <input
+                  type="text"
+                  value={settings.primaryColor}
+                  onChange={(e) => onChange('primaryColor', e.target.value)}
+                  className="flex-1 px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-mono text-sm"
+                />
+                <button
+                  onClick={() => copyColor(settings.primaryColor)}
+                  className="px-3 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                >
+                  {copied === settings.primaryColor ? 
+                    <Check className="w-4 h-4 text-green-500" strokeWidth={1.5} /> : 
+                    <Copy className="w-4 h-4" strokeWidth={1.5} />
+                  }
+                </button>
+              </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Accent Color</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Accent Color
+            </label>
             <div className="flex gap-3">
               <input
                 type="color"
                 value={settings.accentColor}
-                onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-                className="w-20 h-12 rounded-xl border border-stone-200 dark:border-stone-800 cursor-pointer"
+                onChange={(e) => onChange('accentColor', e.target.value)}
+                className="w-20 h-12 border border-stone-200 dark:border-stone-700 cursor-pointer"
               />
-              <input
-                type="text"
-                value={settings.accentColor}
-                onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-                className="flex-1 px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
-              />
+              <div className="flex-1 flex gap-2">
+                <input
+                  type="text"
+                  value={settings.accentColor}
+                  onChange={(e) => onChange('accentColor', e.target.value)}
+                  className="flex-1 px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-mono text-sm"
+                />
+                <button
+                  onClick={() => copyColor(settings.accentColor)}
+                  className="px-3 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                >
+                  {copied === settings.accentColor ? 
+                    <Check className="w-4 h-4 text-green-500" strokeWidth={1.5} /> : 
+                    <Copy className="w-4 h-4" strokeWidth={1.5} />
+                  }
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Font Family</label>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Font Family
+          </label>
           <select
             value={settings.fontFamily}
-            onChange={(e) => setSettings({ ...settings, fontFamily: e.target.value })}
-            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            onChange={(e) => onChange('fontFamily', e.target.value)}
+            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
           >
             <option value="Crimson Pro">Crimson Pro (Serif)</option>
             <option value="Inter">Inter (Sans-serif)</option>
@@ -401,16 +564,18 @@ function AppearanceSettings({ settings, setSettings }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Dark Mode</label>
-          <div className="flex gap-3">
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Dark Mode
+          </label>
+          <div className="grid grid-cols-3 gap-3">
             {['auto', 'light', 'dark'].map(mode => (
               <button
                 key={mode}
-                onClick={() => setSettings({ ...settings, darkMode: mode })}
-                className={`flex-1 px-4 py-3 rounded-xl border transition-all ${
+                onClick={() => onChange('darkMode', mode)}
+                className={`px-4 py-3 border transition-all font-light ${
                   settings.darkMode === mode
-                    ? 'border-stone-900 dark:border-white bg-stone-900 dark:bg-white text-white dark:text-stone-900'
-                    : 'border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800'
+                    ? 'border-stone-900 dark:border-stone-100 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
+                    : 'border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900'
                 }`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -419,35 +584,19 @@ function AppearanceSettings({ settings, setSettings }) {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Logo & Brand Assets</h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl p-8 text-center hover:border-stone-400 dark:hover:border-stone-600 transition-colors cursor-pointer">
-              <ImageIcon className="w-12 h-12 mx-auto mb-3 text-stone-400" />
-              <p className="text-sm font-medium mb-1">Upload Logo</p>
-              <p className="text-xs text-stone-500">PNG, SVG (Max 2MB)</p>
-            </div>
-            <div className="border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl p-8 text-center hover:border-stone-400 dark:hover:border-stone-600 transition-colors cursor-pointer">
-              <ImageIcon className="w-12 h-12 mx-auto mb-3 text-stone-400" />
-              <p className="text-sm font-medium mb-1">Upload Favicon</p>
-              <p className="text-xs text-stone-500">ICO, PNG (32x32px)</p>
-            </div>
-          </div>
-        </div>
-
         {/* Color Preview */}
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Preview</h4>
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light mb-4 text-stone-700 dark:text-stone-300">Live Preview</h4>
           <div className="grid md:grid-cols-2 gap-4">
             <div 
-              className="h-24 rounded-xl flex items-center justify-center text-white font-medium"
-              style={{ backgroundColor: settings.primaryColor }}
+              className="h-24 flex items-center justify-center text-white font-light"
+              style={{ backgroundColor: settings.primaryColor, fontFamily: settings.fontFamily }}
             >
               Primary Color
             </div>
             <div 
-              className="h-24 rounded-xl flex items-center justify-center text-white font-medium"
-              style={{ backgroundColor: settings.accentColor }}
+              className="h-24 flex items-center justify-center text-white font-light"
+              style={{ backgroundColor: settings.accentColor, fontFamily: settings.fontFamily }}
             >
               Accent Color
             </div>
@@ -459,121 +608,116 @@ function AppearanceSettings({ settings, setSettings }) {
 }
 
 // Notification Settings Component
-function NotificationSettings({ settings, setSettings }) {
-  const toggleSetting = (key) => {
-    setSettings({ ...settings, [key]: !settings[key] });
-  };
+function NotificationSettings({ settings, onChange, changes }) {
+  const ToggleSwitch = ({ value, onChange: onToggle, disabled = false }) => (
+    <button
+      onClick={() => !disabled && onToggle(!value)}
+      disabled={disabled}
+      className={`w-14 h-8 rounded-full transition-colors relative ${
+        value ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+      <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
+        value ? 'translate-x-7' : 'translate-x-1'
+      }`} />
+    </button>
+  );
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Notification Preferences
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        Notification <span className="elegant-text">Preferences</span>
       </h3>
       
       <div className="space-y-6">
-        <div className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-950 rounded-xl">
+        <div className="flex items-center justify-between p-6 bg-stone-50 dark:bg-stone-950">
           <div>
-            <div className="font-medium mb-1">Email Notifications</div>
-            <div className="text-sm text-stone-600 dark:text-stone-400">
+            <div className="font-light text-lg text-stone-900 dark:text-stone-50 mb-1">Email Notifications</div>
+            <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
               Master toggle for all email notifications
             </div>
           </div>
-          <button
-            onClick={() => toggleSetting('emailNotifications')}
-            className={`w-14 h-8 rounded-full transition-colors relative ${
-              settings.emailNotifications ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-            }`}
-          >
-            <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-              settings.emailNotifications ? 'translate-x-7' : 'translate-x-1'
-            }`} />
-          </button>
+          <ToggleSwitch
+            value={settings.emailNotifications}
+            onChange={(val) => onChange('emailNotifications', val)}
+          />
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">New Reservation Alerts</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">New Reservation Alerts</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Get notified when someone books an event
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('newReservationAlert')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.newReservationAlert ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
+            <ToggleSwitch
+              value={settings.newReservationAlert}
+              onChange={(val) => onChange('newReservationAlert', val)}
               disabled={!settings.emailNotifications}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.newReservationAlert ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            />
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">New User Alerts</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">New User Alerts</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Get notified when someone joins your community
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('newUserAlert')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.newUserAlert ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
+            <ToggleSwitch
+              value={settings.newUserAlert}
+              onChange={(val) => onChange('newUserAlert', val)}
               disabled={!settings.emailNotifications}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.newUserAlert ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            />
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">Weekly Reports</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
-                Receive weekly analytics summary
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Weekly Reports</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
+                Receive weekly analytics summary every Monday
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('weeklyReport')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.weeklyReport ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
+            <ToggleSwitch
+              value={settings.weeklyReport}
+              onChange={(val) => onChange('weeklyReport', val)}
               disabled={!settings.emailNotifications}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.weeklyReport ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            />
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">Monthly Reports</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Monthly Reports</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Receive monthly performance insights
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('monthlyReport')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.monthlyReport ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
+            <ToggleSwitch
+              value={settings.monthlyReport}
+              onChange={(val) => onChange('monthlyReport', val)}
               disabled={!settings.emailNotifications}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.monthlyReport ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            />
+          </div>
+        </div>
+
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-light text-stone-700 dark:text-stone-300">Enabled Notifications</h4>
+            <span className="text-sm font-light text-stone-900 dark:text-stone-50">
+              {[settings.newReservationAlert, settings.newUserAlert, settings.weeklyReport, settings.monthlyReport].filter(Boolean).length} of 4
+            </span>
+          </div>
+          <div className="h-2 bg-stone-200 dark:bg-stone-800 overflow-hidden">
+            <div 
+              className="h-full bg-green-500 transition-all duration-500"
+              style={{ width: `${([settings.newReservationAlert, settings.newUserAlert, settings.weeklyReport, settings.monthlyReport].filter(Boolean).length / 4) * 100}%` }}
+            />
           </div>
         </div>
       </div>
@@ -582,42 +726,55 @@ function NotificationSettings({ settings, setSettings }) {
 }
 
 // Event Settings Component
-function EventSettings({ settings, setSettings }) {
-  const toggleSetting = (key) => {
-    setSettings({ ...settings, [key]: !settings[key] });
-  };
+function EventSettings({ settings, onChange, changes }) {
+  const ToggleSwitch = ({ value, onChange: onToggle }) => (
+    <button
+      onClick={() => onToggle(!value)}
+      className={`w-14 h-8 rounded-full transition-colors relative ${
+        value ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
+      }`}
+    >
+      <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
+        value ? 'translate-x-7' : 'translate-x-1'
+      }`} />
+    </button>
+  );
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Event Configuration
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        Event <span className="elegant-text">Configuration</span>
       </h3>
       
       <div className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Default Capacity</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Default Capacity
+            </label>
             <input
               type="number"
               value={settings.defaultCapacity}
-              onChange={(e) => setSettings({ ...settings, defaultCapacity: parseInt(e.target.value) })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              onChange={(e) => onChange('defaultCapacity', parseInt(e.target.value))}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
               min="1"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Default Duration (minutes)</label>
+            <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+              Default Duration (minutes)
+            </label>
             <input
               type="number"
               value={settings.defaultDuration}
-              onChange={(e) => setSettings({ ...settings, defaultDuration: parseInt(e.target.value) })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+              onChange={(e) => onChange('defaultDuration', parseInt(e.target.value))}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
               min="30"
               step="30"
             />
@@ -625,304 +782,55 @@ function EventSettings({ settings, setSettings }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Cancellation Policy (days before event)</label>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Cancellation Policy (days before event)
+          </label>
           <input
             type="number"
             value={settings.cancellationDays}
-            onChange={(e) => setSettings({ ...settings, cancellationDays: parseInt(e.target.value) })}
-            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            onChange={(e) => onChange('cancellationDays', parseInt(e.target.value))}
+            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             min="0"
           />
-          <p className="text-sm text-stone-500 mt-2">Users can cancel and get full refund if done this many days before the event</p>
+          <p className="text-sm text-stone-500 dark:text-stone-500 mt-2 font-light">Users can cancel and get full refund if done this many days before the event</p>
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-stone-200 dark:border-stone-800">
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+        <div className="space-y-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">Allow Waitlist</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Allow Waitlist</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Let users join a waitlist when events are full
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('allowWaitlist')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.allowWaitlist ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.allowWaitlist ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            <ToggleSwitch
+              value={settings.allowWaitlist}
+              onChange={(val) => onChange('allowWaitlist', val)}
+            />
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">Auto-Confirm Reservations</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Auto-Confirm Reservations</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Automatically confirm reservations without manual approval
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('autoConfirm')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.autoConfirm ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.autoConfirm ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// Payment Settings Component
-function PaymentSettings({ settings, setSettings }) {
-  const [showApiKey, setShowApiKey] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
-    >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Payment Configuration
-      </h3>
-      
-      <div className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">Currency</label>
-            <select
-              value={settings.currency}
-              onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-            >
-              <option value="ZAR">ZAR - South African Rand</option>
-              <option value="USD">USD - US Dollar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="GBP">GBP - British Pound</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Tax Rate (%)</label>
-            <input
-              type="number"
-              value={settings.taxRate}
-              onChange={(e) => setSettings({ ...settings, taxRate: parseFloat(e.target.value) })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-              min="0"
-              max="100"
-              step="0.1"
+            <ToggleSwitch
+              value={settings.autoConfirm}
+              onChange={(val) => onChange('autoConfirm', val)}
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">Payment Gateway</label>
-          <div className="grid md:grid-cols-3 gap-4">
-            {['stripe', 'paypal', 'payfast'].map(gateway => (
-              <button
-                key={gateway}
-                onClick={() => setSettings({ ...settings, paymentGateway: gateway })}
-                className={`p-4 border rounded-xl transition-all ${
-                  settings.paymentGateway === gateway
-                    ? 'border-stone-900 dark:border-white bg-stone-900 dark:bg-white text-white dark:text-stone-900'
-                    : 'border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800'
-                }`}
-              >
-                <CreditCard className="w-6 h-6 mx-auto mb-2" />
-                <div className="text-sm font-medium capitalize">{gateway}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="font-medium text-amber-900 dark:text-amber-200 mb-1">Test Mode Active</div>
-            <div className="text-sm text-amber-800 dark:text-amber-300">
-              All payments are in test mode. No real transactions will be processed.
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light text-stone-700 dark:text-stone-300 mb-4">Quick Preview</h4>
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border-l-4 border-blue-500">
+            <div className="text-sm text-blue-900 dark:text-blue-200 font-light space-y-2">
+              <p>New events will have <strong className="font-medium">{settings.defaultCapacity} seats</strong> and last <strong className="font-medium">{settings.defaultDuration} minutes</strong></p>
+              <p>Cancellations allowed up to <strong className="font-medium">{settings.cancellationDays} days</strong> before event</p>
+              <p>Waitlist: <strong className="font-medium">{settings.allowWaitlist ? 'Enabled' : 'Disabled'}</strong> • Auto-confirm: <strong className="font-medium">{settings.autoConfirm ? 'Yes' : 'No'}</strong></p>
             </div>
-            <button
-              onClick={() => setSettings({ ...settings, testMode: !settings.testMode })}
-              className="mt-3 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
-            >
-              {settings.testMode ? 'Switch to Live Mode' : 'Switch to Test Mode'}
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">API Keys</label>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-stone-600 dark:text-stone-400 mb-2">Publishable Key</label>
-              <input
-                type="text"
-                placeholder="pk_test_..."
-                className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-stone-600 dark:text-stone-400 mb-2">Secret Key</label>
-              <div className="relative">
-                <input
-                  type={showApiKey ? "text" : "password"}
-                  placeholder="sk_test_..."
-                  className="w-full px-4 py-3 pr-12 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono text-sm"
-                />
-                <button
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg"
-                >
-                  {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Payment Methods</h4>
-          <div className="grid md:grid-cols-2 gap-4">
-            {['Credit Card', 'Debit Card', 'EFT', 'Mobile Money'].map(method => (
-              <div key={method} className="flex items-center gap-3 p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
-                <span className="text-sm font-medium">{method}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// Email Settings Component
-function EmailSettings({ settings, setSettings }) {
-  const [showPassword, setShowPassword] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
-    >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Email Configuration
-      </h3>
-      
-      <div className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">From Email</label>
-            <input
-              type="email"
-              value={settings.fromEmail}
-              onChange={(e) => setSettings({ ...settings, fromEmail: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">From Name</label>
-            <input
-              type="text"
-              value={settings.fromName}
-              onChange={(e) => setSettings({ ...settings, fromName: e.target.value })}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-            />
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">SMTP Configuration</h4>
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">SMTP Host</label>
-                <input
-                  type="text"
-                  value={settings.smtpHost}
-                  onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
-                  placeholder="smtp.gmail.com"
-                  className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Port</label>
-                <input
-                  type="number"
-                  value={settings.smtpPort}
-                  onChange={(e) => setSettings({ ...settings, smtpPort: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
-              <input
-                type="text"
-                value={settings.smtpUser}
-                onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
-                className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={settings.smtpPassword}
-                  onChange={(e) => setSettings({ ...settings, smtpPassword: e.target.value })}
-                  className="w-full px-4 py-3 pr-12 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-                />
-                <button
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <button className="w-full px-4 py-3 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl hover:border-stone-400 dark:hover:border-stone-600 transition-colors inline-flex items-center justify-center gap-2 text-stone-600 dark:text-stone-400">
-              <Mail className="w-5 h-5" />
-              Send Test Email
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Email Templates</h4>
-          <div className="grid md:grid-cols-2 gap-4">
-            {['Welcome Email', 'Reservation Confirmation', 'Event Reminder', 'Cancellation Notice', 'Newsletter', 'Password Reset'].map(template => (
-              <button
-                key={template}
-                className="p-4 border border-stone-200 dark:border-stone-800 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors text-left"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium mb-1">{template}</div>
-                    <div className="text-xs text-stone-500">Last edited 2 days ago</div>
-                  </div>
-                  <FileText className="w-5 h-5 text-stone-400" />
-                </div>
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -931,95 +839,76 @@ function EmailSettings({ settings, setSettings }) {
 }
 
 // Security Settings Component
-function SecuritySettings({ settings, setSettings }) {
-  const toggleSetting = (key) => {
-    setSettings({ ...settings, [key]: !settings[key] });
-  };
+function SecuritySettings({ settings, onChange, changes }) {
+  const ToggleSwitch = ({ value, onChange: onToggle }) => (
+    <button
+      onClick={() => onToggle(!value)}
+      className={`w-14 h-8 rounded-full transition-colors relative ${
+        value ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
+      }`}
+    >
+      <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
+        value ? 'translate-x-7' : 'translate-x-1'
+      }`} />
+    </button>
+  );
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Security & Privacy
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        Security & <span className="elegant-text">Privacy</span>
       </h3>
       
       <div className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">Allow User Registration</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Allow User Registration</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Let new users create accounts
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('allowRegistration')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.allowRegistration ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.allowRegistration ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            <ToggleSwitch
+              value={settings.allowRegistration}
+              onChange={(val) => onChange('allowRegistration', val)}
+            />
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+          <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
             <div>
-              <div className="font-medium mb-1">Email Verification Required</div>
-              <div className="text-sm text-stone-600 dark:text-stone-400">
+              <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Email Verification Required</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
                 Users must verify email before accessing platform
               </div>
             </div>
-            <button
-              onClick={() => toggleSetting('requireEmailVerification')}
-              className={`w-14 h-8 rounded-full transition-colors relative ${
-                settings.requireEmailVerification ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-              }`}
-            >
-              <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-                settings.requireEmailVerification ? 'translate-x-7' : 'translate-x-1'
-              }`} />
-            </button>
+            <ToggleSwitch
+              value={settings.requireEmailVerification}
+              onChange={(val) => onChange('requireEmailVerification', val)}
+            />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Session Timeout (minutes)</label>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Session Timeout (minutes)
+          </label>
           <input
             type="number"
             value={settings.sessionTimeout}
-            onChange={(e) => setSettings({ ...settings, sessionTimeout: parseInt(e.target.value) })}
-            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            onChange={(e) => onChange('sessionTimeout', parseInt(e.target.value))}
+            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             min="5"
           />
-          <p className="text-sm text-stone-500 mt-2">Users will be logged out after this period of inactivity</p>
+          <p className="text-sm text-stone-500 dark:text-stone-500 mt-2 font-light">Users will be logged out after this period of inactivity</p>
         </div>
 
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Two-Factor Authentication</h4>
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
-            <div className="flex items-start gap-3 mb-4">
-              <Shield className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-medium text-green-900 dark:text-green-200 mb-1">2FA Enabled</div>
-                <div className="text-sm text-green-800 dark:text-green-300">
-                  Your admin account is protected with two-factor authentication
-                </div>
-              </div>
-            </div>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
-              Manage 2FA Settings
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Password Policy</h4>
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light text-stone-700 dark:text-stone-300 mb-4">Password Policy</h4>
           <div className="space-y-3">
             {[
               'Minimum 8 characters',
@@ -1029,23 +918,19 @@ function SecuritySettings({ settings, setSettings }) {
               'Password expires every 90 days'
             ].map((rule, i) => (
               <div key={i} className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <span className="text-sm">{rule}</span>
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" strokeWidth={1.5} />
+                <span className="text-sm font-light text-stone-700 dark:text-stone-300">{rule}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4 text-red-600 dark:text-red-400">Danger Zone</h4>
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light text-red-600 dark:text-red-400 mb-4">Danger Zone</h4>
           <div className="space-y-3">
-            <button className="w-full px-4 py-3 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors inline-flex items-center justify-center gap-2 font-medium">
-              <RefreshCw className="w-5 h-5" />
+            <button className="w-full px-4 py-3 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors inline-flex items-center justify-center gap-2 font-light">
+              <RefreshCw className="w-5 h-5" strokeWidth={1.5} />
               Reset All Settings
-            </button>
-            <button className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2 font-medium">
-              <Trash2 className="w-5 h-5" />
-              Delete All User Data
             </button>
           </div>
         </div>
@@ -1055,121 +940,90 @@ function SecuritySettings({ settings, setSettings }) {
 }
 
 // Advanced Settings Component
-function AdvancedSettings({ settings, setSettings }) {
-  const toggleSetting = (key) => {
-    setSettings({ ...settings, [key]: !settings[key] });
-  };
+function AdvancedSettings({ settings, onChange, changes }) {
+  const ToggleSwitch = ({ value, onChange: onToggle }) => (
+    <button
+      onClick={() => onToggle(!value)}
+      className={`w-14 h-8 rounded-full transition-colors relative ${
+        value ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
+      }`}
+    >
+      <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
+        value ? 'translate-x-7' : 'translate-x-1'
+      }`} />
+    </button>
+  );
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        Advanced Settings
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        Advanced <span className="elegant-text">Settings</span>
       </h3>
       
       <div className="space-y-6">
-        <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border-2 border-red-200 dark:border-red-800">
+        <div className="flex items-center justify-between p-6 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-800">
           <div>
-            <div className="font-medium mb-1 text-red-900 dark:text-red-200">Maintenance Mode</div>
-            <div className="text-sm text-red-800 dark:text-red-300">
+            <div className="font-light text-lg text-red-900 dark:text-red-200 mb-1">Maintenance Mode</div>
+            <div className="text-sm text-red-800 dark:text-red-300 font-light">
               Site will be unavailable to non-admin users
             </div>
           </div>
-          <button
-            onClick={() => toggleSetting('maintenanceMode')}
-            className={`w-14 h-8 rounded-full transition-colors relative ${
-              settings.maintenanceMode ? 'bg-red-500' : 'bg-stone-300 dark:bg-stone-700'
-            }`}
-          >
-            <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-              settings.maintenanceMode ? 'translate-x-7' : 'translate-x-1'
-            }`} />
-          </button>
+          <ToggleSwitch
+            value={settings.maintenanceMode}
+            onChange={(val) => onChange('maintenanceMode', val)}
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Maximum File Upload Size (MB)</label>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            Maximum File Upload Size (MB)
+          </label>
           <input
             type="number"
             value={settings.maxFileSize}
-            onChange={(e) => setSettings({ ...settings, maxFileSize: parseInt(e.target.value) })}
-            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
+            onChange={(e) => onChange('maxFileSize', parseInt(e.target.value))}
+            className="w-full px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-white dark:bg-stone-950 focus:outline-none focus:border-amber-700 dark:focus:border-amber-500 transition-colors font-light"
             min="1"
             max="50"
           />
         </div>
 
-        <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
+        <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-700">
           <div>
-            <div className="font-medium mb-1">Enable Analytics Tracking</div>
-            <div className="text-sm text-stone-600 dark:text-stone-400">
+            <div className="font-light text-stone-900 dark:text-stone-50 mb-1">Enable Analytics Tracking</div>
+            <div className="text-sm text-stone-600 dark:text-stone-400 font-light">
               Track user behavior and site performance
             </div>
           </div>
-          <button
-            onClick={() => toggleSetting('enableAnalytics')}
-            className={`w-14 h-8 rounded-full transition-colors relative ${
-              settings.enableAnalytics ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-            }`}
-          >
-            <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-              settings.enableAnalytics ? 'translate-x-7' : 'translate-x-1'
-            }`} />
-          </button>
+          <ToggleSwitch
+            value={settings.enableAnalytics}
+            onChange={(val) => onChange('enableAnalytics', val)}
+          />
         </div>
 
-        {settings.enableAnalytics && (
-          <div>
-            <label className="block text-sm font-medium mb-2">Google Analytics ID</label>
-            <input
-              type="text"
-              value={settings.googleAnalyticsId}
-              onChange={(e) => setSettings({ ...settings, googleAnalyticsId: e.target.value })}
-              placeholder="G-XXXXXXXXXX"
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400 font-mono"
-            />
-          </div>
-        )}
-
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">Database Maintenance</h4>
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light text-stone-700 dark:text-stone-300 mb-4">System Information</h4>
           <div className="grid md:grid-cols-2 gap-4">
-            <button className="p-4 border border-stone-200 dark:border-stone-800 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
-              <Database className="w-6 h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
-              <div className="text-sm font-medium mb-1">Optimize Database</div>
-              <div className="text-xs text-stone-500">Clean up and optimize tables</div>
-            </button>
-
-            <button className="p-4 border border-stone-200 dark:border-stone-800 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
-              <Download className="w-6 h-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
-              <div className="text-sm font-medium mb-1">Backup Database</div>
-              <div className="text-xs text-stone-500">Create full database backup</div>
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-          <h4 className="font-medium mb-4">System Information</h4>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-4 bg-stone-50 dark:bg-stone-950 rounded-xl">
-              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1">Platform Version</div>
-              <div className="text-lg font-light">v2.5.0</div>
+            <div className="p-4 bg-stone-50 dark:bg-stone-950">
+              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1 font-light">Platform Version</div>
+              <div className="text-lg font-light text-stone-900 dark:text-stone-50">v2.5.0</div>
             </div>
-            <div className="p-4 bg-stone-50 dark:bg-stone-950 rounded-xl">
-              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1">Database Size</div>
-              <div className="text-lg font-light">247 MB</div>
+            <div className="p-4 bg-stone-50 dark:bg-stone-950">
+              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1 font-light">Database Size</div>
+              <div className="text-lg font-light text-stone-900 dark:text-stone-50">247 MB</div>
             </div>
-            <div className="p-4 bg-stone-50 dark:bg-stone-950 rounded-xl">
-              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1">Storage Used</div>
-              <div className="text-lg font-light">1.2 GB / 10 GB</div>
+            <div className="p-4 bg-stone-50 dark:bg-stone-950">
+              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1 font-light">Storage Used</div>
+              <div className="text-lg font-light text-stone-900 dark:text-stone-50">1.2 GB / 10 GB</div>
             </div>
-            <div className="p-4 bg-stone-50 dark:bg-stone-950 rounded-xl">
-              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1">Last Backup</div>
-              <div className="text-lg font-light">2 days ago</div>
+            <div className="p-4 bg-stone-50 dark:bg-stone-950">
+              <div className="text-sm text-stone-600 dark:text-stone-400 mb-1 font-light">Last Backup</div>
+              <div className="text-lg font-light text-stone-900 dark:text-stone-50">2 days ago</div>
             </div>
           </div>
         </div>
@@ -1178,13 +1032,16 @@ function AdvancedSettings({ settings, setSettings }) {
   );
 }
 
-// API Settings Component
-function APISettings({ settings, setSettings }) {
-  const [showWebhookSecret, setShowWebhookSecret] = useState(false);
+// Integrations Settings Component
+function IntegrationsSettings({ settings, onChange, changes }) {
   const [apiKey] = useState('ii_live_' + Math.random().toString(36).slice(2, 34));
+  const [showKey, setShowKey] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const toggleSetting = (key) => {
-    setSettings({ ...settings, [key]: !settings[key] });
+  const copyApiKey = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -1192,189 +1049,110 @@ function APISettings({ settings, setSettings }) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8"
+      className="feature-card p-8"
     >
-      <h3 className="text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
-        API & Webhooks
+      <h3 className="text-2xl font-light mb-6 text-stone-900 dark:text-stone-50" style={{ fontFamily: 'Crimson Pro, serif' }}>
+        API & <span className="elegant-text">Integrations</span>
       </h3>
       
       <div className="space-y-6">
-        <div className="flex items-center justify-between p-4 border border-stone-200 dark:border-stone-800 rounded-xl">
-          <div>
-            <div className="font-medium mb-1">Enable API Access</div>
-            <div className="text-sm text-stone-600 dark:text-stone-400">
-              Allow external applications to access your data
-            </div>
+        <div>
+          <label className="block text-sm font-light mb-3 text-stone-700 dark:text-stone-300">
+            API Key
+          </label>
+          <div className="flex gap-3">
+            <input
+              type={showKey ? "text" : "password"}
+              value={apiKey}
+              readOnly
+              className="flex-1 px-4 py-3 border border-stone-200 dark:border-stone-700 rounded-none bg-stone-50 dark:bg-stone-950 font-mono text-sm"
+            />
+            <button
+              onClick={() => setShowKey(!showKey)}
+              className="px-4 py-3 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors"
+            >
+              {showKey ? <EyeOff className="w-5 h-5" strokeWidth={1.5} /> : <Eye className="w-5 h-5" strokeWidth={1.5} />}
+            </button>
+            <button
+              onClick={copyApiKey}
+              className="px-4 py-3 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors"
+            >
+              {copied ? <Check className="w-5 h-5 text-green-500" strokeWidth={1.5} /> : <Copy className="w-5 h-5" strokeWidth={1.5} />}
+            </button>
+            <button className="px-4 py-3 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors">
+              <RefreshCw className="w-5 h-5" strokeWidth={1.5} />
+            </button>
           </div>
-          <button
-            onClick={() => toggleSetting('apiEnabled')}
-            className={`w-14 h-8 rounded-full transition-colors relative ${
-              settings.apiEnabled ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-700'
-            }`}
-          >
-            <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-transform ${
-              settings.apiEnabled ? 'translate-x-7' : 'translate-x-1'
-            }`} />
-          </button>
+          <p className="text-sm text-stone-500 dark:text-stone-500 mt-2 font-light">Keep this key secure. It provides full access to your account.</p>
         </div>
 
-        {settings.apiEnabled && (
-          <>
-            <div>
-              <label className="block text-sm font-medium mb-2">API Key</label>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={apiKey}
-                  readOnly
-                  className="flex-1 px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-stone-50 dark:bg-stone-950 font-mono text-sm"
-                />
-                <button
-                  onClick={() => navigator.clipboard.writeText(apiKey)}
-                  className="px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
-                >
-                  <Key className="w-5 h-5" />
-                </button>
-                <button className="px-4 py-3 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                  <RefreshCw className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-stone-500 mt-2">Keep this key secure. It provides full access to your account.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Rate Limit (requests/hour)</label>
-              <input
-                type="number"
-                value={settings.apiRateLimit}
-                onChange={(e) => setSettings({ ...settings, apiRateLimit: parseInt(e.target.value) })}
-                className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-                min="10"
-                max="10000"
-              />
-            </div>
-
-            <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-              <h4 className="font-medium mb-4">API Documentation</h4>
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <div className="flex items-start gap-3 mb-4">
-                  <Code className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-medium text-blue-900 dark:text-blue-200 mb-1">API Endpoints Available</div>
-                    <div className="text-sm text-blue-800 dark:text-blue-300 mb-3">
-                      Access events, reservations, users, and more via RESTful API
-                    </div>
-                    <div className="space-y-2 text-sm font-mono text-blue-900 dark:text-blue-200">
-                      <div>GET /api/v1/events</div>
-                      <div>POST /api/v1/reservations</div>
-                      <div>GET /api/v1/users</div>
-                      <div>POST /api/v1/testimonials</div>
-                    </div>
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light text-stone-700 dark:text-stone-300 mb-4">API Documentation</h4>
+          <div className="p-6 bg-blue-50 dark:bg-blue-950/20 border-l-4 border-blue-500">
+            <div className="flex items-start gap-3 mb-4">
+              <Code className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div>
+                <div className="font-light text-blue-900 dark:text-blue-200 mb-2">API Endpoints Available</div>
+                <div className="text-sm text-blue-800 dark:text-blue-300 mb-3 font-light">
+                  Access events, reservations, users, and more via RESTful API
+                </div>
+                <div className="space-y-2 text-sm font-mono text-blue-900 dark:text-blue-200">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 text-xs">GET</span>
+                    <span>/api/v1/events</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 text-xs">POST</span>
+                    <span>/api/v1/reservations</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 text-xs">GET</span>
+                    <span>/api/v1/users</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-xs">PUT</span>
+                    <span>/api/v1/testimonials</span>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                  View Full Documentation
-                </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-              <h4 className="font-medium mb-4">Webhooks</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Webhook URL</label>
-                  <input
-                    type="url"
-                    value={settings.webhookUrl}
-                    onChange={(e) => setSettings({ ...settings, webhookUrl: e.target.value })}
-                    placeholder="https://your-domain.com/webhook"
-                    className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400"
-                  />
+        <div className="pt-6 border-t border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-light text-stone-700 dark:text-stone-300 mb-4">Recent API Activity</h4>
+          <div className="space-y-3">
+            {[
+              { method: 'GET', endpoint: '/api/v1/events', status: 200, time: '2 minutes ago' },
+              { method: 'POST', endpoint: '/api/v1/reservations', status: 201, time: '15 minutes ago' },
+              { method: 'GET', endpoint: '/api/v1/users', status: 200, time: '1 hour ago' },
+              { method: 'PUT', endpoint: '/api/v1/events/123', status: 200, time: '2 hours ago' }
+            ].map((activity, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-950">
+                <div className="flex items-center gap-3">
+                  <span className={`px-2 py-1 text-xs font-light ${
+                    activity.method === 'GET' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400' :
+                    activity.method === 'POST' ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400' :
+                    'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                  }`}>
+                    {activity.method}
+                  </span>
+                  <span className="text-sm font-mono font-light text-stone-900 dark:text-stone-50">{activity.endpoint}</span>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Webhook Events</label>
-                  <div className="space-y-2">
-                    {[
-                      'event.created',
-                      'event.updated',
-                      'reservation.created',
-                      'reservation.confirmed',
-                      'reservation.cancelled',
-                      'user.registered',
-                      'testimonial.submitted'
-                    ].map(event => (
-                      <div key={event} className="flex items-center gap-3 p-3 border border-stone-200 dark:border-stone-800 rounded-lg">
-                        <input type="checkbox" defaultChecked className="w-4 h-4" />
-                        <span className="text-sm font-mono">{event}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-2 py-1 text-xs font-light ${
+                    activity.status === 200 || activity.status === 201
+                      ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                  }`}>
+                    {activity.status}
+                  </span>
+                  <span className="text-xs text-stone-500 dark:text-stone-500 font-light">{activity.time}</span>
                 </div>
-
-               <div>
-                    <label className="block text-sm font-medium mb-2">Webhook Secret</label>
-                    <div className="relative">
-                    <input
-                        type={showWebhookSecret ? "text" : "password"}
-                        // FIX APPLIED HERE: The entire expression is now inside { }
-                        value={"whsec_" + Math.random().toString(36).slice(2, 26)}
-                        readOnly
-                        className="w-full px-4 py-3 pr-12 border border-stone-200 dark:border-stone-800 rounded-xl bg-stone-50 dark:bg-stone-950 font-mono text-sm"
-                    />
-                    <button
-                        onClick={() => setShowWebhookSecret(!showWebhookSecret)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg"
-                    >
-                        {showWebhookSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                    </div>
-                    <p className="text-sm text-stone-500 mt-2">Use this to verify webhook signatures</p>
-                </div>
-
-                <button className="w-full px-4 py-3 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl hover:border-stone-400 dark:hover:border-stone-600 transition-colors inline-flex items-center justify-center gap-2 text-stone-600 dark:text-stone-400">
-                  <Webhook className="w-5 h-5" />
-                  Test Webhook
-                </button>
               </div>
-            </div>
-
-            <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-              <h4 className="font-medium mb-4">Recent API Activity</h4>
-              <div className="space-y-3">
-                {[
-                  { method: 'GET', endpoint: '/api/v1/events', status: 200, time: '2 minutes ago' },
-                  { method: 'POST', endpoint: '/api/v1/reservations', status: 201, time: '15 minutes ago' },
-                  { method: 'GET', endpoint: '/api/v1/users', status: 200, time: '1 hour ago' },
-                  { method: 'PUT', endpoint: '/api/v1/events/123', status: 200, time: '2 hours ago' }
-                ].map((activity, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-950 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${
-                        activity.method === 'GET' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' :
-                        activity.method === 'POST' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
-                        'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
-                      }`}>
-                        {activity.method}
-                      </span>
-                      <span className="text-sm font-mono">{activity.endpoint}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        activity.status === 200 || activity.status === 201
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-                      }`}>
-                        {activity.status}
-                      </span>
-                      <span className="text-xs text-stone-500">{activity.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+            ))}
+          </div>
+        </div>
       </div>
     </motion.div>
   );
