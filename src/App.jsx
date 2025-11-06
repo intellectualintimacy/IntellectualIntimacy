@@ -19,6 +19,8 @@ import ForgotPassword from './routes/ForgotPassword';
 import ResetPassword from './routes/ResetPassword';
 import ConfirmEmail from './routes/ConfirmEmail';
 import ConnectionMonitor from './components/ConnectionMonitor';
+// import Navigation from './components/layout/Navigation';
+import Blog from './routes/Blog';
 import Profile from './routes/Profile';
 import { supabase } from "../lib/supabase";
 import "./App.css";
@@ -53,6 +55,7 @@ function AppContent({ darkMode, setDarkMode }) {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/blog" element={<Blog />} />
 
       </Routes>
 

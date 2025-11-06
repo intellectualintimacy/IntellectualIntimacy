@@ -78,7 +78,7 @@ export default function Footer() {
               {["Blog", "Podcast", "Newsletter", "FAQ"].map((item) => (
                 <li key={item}>
                   <a
-                    href="#"
+                    href="/blog"
                     className="text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 transition-colors font-light"
                   >
                     {item}
