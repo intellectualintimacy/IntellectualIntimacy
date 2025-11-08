@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Calendar, Users, MessageSquare, Mail,
+  LayoutDashboard, Calendar, Users, MessageSquare, Mail, BookOpen,
   Settings, ChevronLeft, ChevronRight, CreditCard, BarChart3
 } from 'lucide-react';
 import DashboardView from './DashboardView';
@@ -12,6 +12,7 @@ import UsersManagement from './UsersManagement';
 import TestimonialsManagement from './TestimonialsManagement';
 import NewsletterManagement from './NewsletterManagement';
 import AnalyticsView from './AnalyticsView';
+import BlogManagement from './BlogManagement';
 import SettingsView from './SettingsView';
 
 
@@ -24,6 +25,7 @@ export default function AdminLayout({ currentView, setCurrentView }) {
     { id: 'events', icon: Calendar, label: 'Events' },
     { id: 'reservations', icon: CreditCard, label: 'Reservations' },
     { id: 'users', icon: Users, label: 'Users' },
+    { id: 'blog', icon: BookOpen, label: 'Blog' },
     { id: 'testimonials', icon: MessageSquare, label: 'Testimonials' },
     { id: 'newsletter', icon: Mail, label: 'Newsletter' },
     { id: 'analytics', icon: BarChart3, label: 'Analytics' },
@@ -80,6 +82,7 @@ export default function AdminLayout({ currentView, setCurrentView }) {
           {currentView === 'events' && <EventsManagement key="events" />}
           {currentView === 'reservations' && <ReservationsManagement key="reservations" />}
           {currentView === 'users' && <UsersManagement key="users" />}
+          {currentView === 'blog' && <BlogManagement key="blog" />}
           {currentView === 'testimonials' && <TestimonialsManagement key="testimonials" />}
           {currentView === 'newsletter' && <NewsletterManagement key="newsletter" />}
           {currentView === 'analytics' && <AnalyticsView key="analytics" />}

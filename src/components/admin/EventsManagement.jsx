@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, Clock, MapPin, Users, DollarSign, TrendingUp, 
-  Search, Filter, Download, Plus, Edit2, Trash2, Copy, 
+  Search, Filter, Download, Plus, Edit2, Trash2, Copy,
   CheckCircle, XCircle, AlertCircle, Eye, Send, Mail,
   BarChart3, PieChart, Activity, Target, Zap, Sparkles,
   Upload, Loader2, X, ChevronDown, ChevronUp, Star,

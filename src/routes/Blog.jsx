@@ -98,7 +98,7 @@ export default function Blog() {
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900 pt-32 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" strokeWidth={1.5} />
+        <Loader2 className="w-8 h-8 animate-spin text-stone-600 dark:text-stone-400" strokeWidth={1.5} />
       </main>
     )
   }
@@ -124,7 +124,7 @@ export default function Blog() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8 rounded-2xl overflow-hidden"
+              className="mb-8 overflow-hidden"
             >
               <img
                 src={selectedBlog.featured_image_url}
@@ -142,7 +142,7 @@ export default function Blog() {
             className="mb-12"
           >
             <div className="flex items-center gap-3 mb-6 flex-wrap">
-              <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-sm font-light">
+              <span className="px-3 py-1 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-sm font-light">
                 {selectedBlog.category}
               </span>
               <span className="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-sm font-light">
@@ -175,10 +175,10 @@ export default function Blog() {
                 <img
                   src={selectedBlog.author_avatar_url}
                   alt={selectedBlog.author_name}
-                  className="w-12 h-12 rounded-full"
+                  className="w-12 h-12"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-light">
+                <div className="w-12 h-12 bg-stone-200 dark:bg-stone-700 flex items-center justify-center text-stone-700 dark:text-stone-300 font-light">
                   {selectedBlog.author_name?.[0] || 'A'}
                 </div>
               )}
@@ -202,7 +202,7 @@ export default function Blog() {
           >
             <div 
               dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
-              className="text-stone-700 dark:text-stone-300 leading-relaxed font-light [&>h2]:text-3xl [&>h2]:font-light [&>h2]:mt-12 [&>h2]:mb-6 [&>h3]:text-2xl [&>h3]:font-light [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:leading-relaxed [&>ul]:my-6 [&>ol]:my-6 [&>blockquote]:border-l-4 [&>blockquote]:border-amber-500 [&>blockquote]:pl-6 [&>blockquote]:italic"
+              className="text-stone-700 dark:text-stone-300 leading-relaxed font-light [&>h2]:text-3xl [&>h2]:font-light [&>h2]:mt-12 [&>h2]:mb-6 [&>h3]:text-2xl [&>h3]:font-light [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:leading-relaxed [&>ul]:my-6 [&>ol]:my-6 [&>blockquote]:border-l-4 [&>blockquote]:border-stone-400 [&>blockquote]:pl-6 [&>blockquote]:italic"
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
             />
           </motion.div>
@@ -219,7 +219,7 @@ export default function Blog() {
               {selectedBlog.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 text-sm font-light"
+                  className="px-3 py-1 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 text-sm font-light"
                 >
                   {tag}
                 </span>
@@ -232,12 +232,12 @@ export default function Blog() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex items-center justify-between p-6 bg-stone-50 dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800"
+            className="flex items-center justify-between p-6 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800"
           >
             <p className="font-light text-stone-900 dark:text-stone-100">
               Share this article
             </p>
-            <button className="px-6 py-2 rounded-full bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-light flex items-center gap-2">
+            <button className="px-6 py-2 bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-light flex items-center gap-2">
               <Share2 className="w-4 h-4" strokeWidth={1.5} />
               Share
             </button>
@@ -258,9 +258,9 @@ export default function Blog() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-8"></div>
-            <h1 className="text-6xl lg:text-7xl mb-8 font-light text-stone-900 dark:text-stone-100" style={{ fontFamily: 'Crimson Pro, serif' }}>
-              Our <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Blog</span>
+            <div className="elegant-divider mb-8"></div>
+            <h1 className="text-6xl lg:text-7xl mb-8 font-light" style={{ fontFamily: 'Crimson Pro, serif' }}>
+              Our <span className="elegant-text">Blog</span>
             </h1>
             <p className="text-xl text-stone-600 dark:text-stone-300 leading-relaxed font-light">
               Insights, reflections, and conversations on building deeper connections 
@@ -280,7 +280,7 @@ export default function Blog() {
               className="mb-12"
             >
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
+                <TrendingUp className="w-5 h-5 text-stone-600 dark:text-stone-400" strokeWidth={1.5} />
                 <h2 className="text-3xl font-light text-stone-900 dark:text-stone-100" style={{ fontFamily: 'Crimson Pro, serif' }}>
                   Featured Posts
                 </h2>
@@ -295,7 +295,7 @@ export default function Blog() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
                   onClick={() => openBlog(blog)}
-                  className="group cursor-pointer bg-stone-50 dark:bg-stone-800 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-700 hover:border-amber-500 dark:hover:border-amber-500 transition-all duration-300"
+                  className="group cursor-pointer bg-stone-50 dark:bg-stone-800 overflow-hidden border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-300"
                 >
                   {blog.featured_image_url && (
                     <div className="relative h-56 overflow-hidden">
@@ -304,14 +304,14 @@ export default function Blog() {
                         alt={blog.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-light">
+                      <div className="absolute top-4 left-4 px-3 py-1 bg-stone-800 dark:bg-stone-200 text-white dark:text-stone-900 text-xs font-light">
                         Featured
                       </div>
                     </div>
                   )}
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3 text-sm text-stone-500 dark:text-stone-400 font-light">
-                      <span className="px-2 py-1 rounded-full bg-stone-100 dark:bg-stone-900 text-xs">
+                      <span className="px-2 py-1 bg-stone-100 dark:bg-stone-900 text-xs">
                         {blog.category}
                       </span>
                       <span className="flex items-center gap-1">
@@ -319,7 +319,7 @@ export default function Blog() {
                         {blog.read_time_minutes} min
                       </span>
                     </div>
-                    <h3 className="text-xl mb-3 font-light text-stone-900 dark:text-stone-100 group-hover:text-amber-500 transition-colors line-clamp-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
+                    <h3 className="text-xl mb-3 font-light text-stone-800 dark:text-stone-100 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors line-clamp-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
                       {blog.title}
                     </h3>
                     <p className="text-stone-600 dark:text-stone-400 font-light text-sm line-clamp-2 mb-4">
@@ -352,7 +352,7 @@ export default function Blog() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search articles..."
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-100 rounded-xl focus:outline-none focus:border-amber-500 transition-colors font-light"
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-100 focus:outline-none focus:border-stone-400 dark:focus:border-stone-500 transition-colors font-light"
               />
             </div>
 
@@ -362,10 +362,10 @@ export default function Blog() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg font-light whitespace-nowrap transition-all ${
+                  className={`px-4 py-2 font-light whitespace-nowrap transition-all ${
                     selectedCategory === category
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800 hover:border-amber-500 dark:hover:border-amber-500'
+                      ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
+                      : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-500'
                   }`}
                 >
                   {category}
@@ -405,7 +405,7 @@ export default function Blog() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                   onClick={() => openBlog(blog)}
-                  className="group cursor-pointer bg-stone-50 dark:bg-stone-800 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-700 hover:border-amber-500 dark:hover:border-amber-500 transition-all duration-300 hover:shadow-lg"
+                  className="group cursor-pointer bg-stone-50 dark:bg-stone-800 overflow-hidden border border-stone-200 dark:border-stone-700 hover:border-stone-400 dark:hover:border-stone-500 transition-all duration-300 hover:shadow-lg"
                 >
                   {blog.featured_image_url && (
                     <div className="relative h-48 overflow-hidden">
@@ -418,7 +418,7 @@ export default function Blog() {
                   )}
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3 text-sm text-stone-500 dark:text-stone-400 font-light">
-                      <span className="px-2 py-1 rounded-full bg-stone-100 dark:bg-stone-900 text-xs">
+                      <span className="px-2 py-1 bg-stone-100 dark:bg-stone-900 text-xs">
                         {blog.category}
                       </span>
                       <span className="flex items-center gap-1">
@@ -426,7 +426,7 @@ export default function Blog() {
                         {blog.read_time_minutes} min
                       </span>
                     </div>
-                    <h3 className="text-xl mb-3 font-light text-stone-900 dark:text-stone-100 group-hover:text-amber-500 transition-colors line-clamp-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
+                    <h3 className="text-xl mb-3 font-light text-stone-800 dark:text-stone-100 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors line-clamp-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
                       {blog.title}
                     </h3>
                     <p className="text-stone-600 dark:text-stone-400 font-light text-sm line-clamp-3 mb-4">
@@ -450,20 +450,21 @@ export default function Blog() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-20 bg-gradient-to-br from-amber-500 to-orange-500">
+      <section className="py-20 bg-stone-50 dark:bg-stone-950">
         <div className="max-w-4xl mx-auto px-8 lg:px-16 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl lg:text-5xl mb-6 font-light text-white" style={{ fontFamily: 'Crimson Pro, serif' }}>
-              Never Miss a Post
+            <div className="elegant-divider mb-8"></div>
+            <h2 className="text-4xl lg:text-5xl mb-6 font-light" style={{ fontFamily: 'Crimson Pro, serif' }}>
+              Never Miss a <span className="elegant-text">Post</span>
             </h2>
-            <p className="text-xl text-white/90 font-light mb-8">
+            <p className="text-xl text-stone-600 dark:text-stone-300 font-light mb-8">
               Subscribe to our newsletter and get the latest insights delivered to your inbox.
             </p>
-            <button className="px-8 py-4 bg-white text-stone-900 rounded-full hover:bg-stone-100 transition-colors font-light inline-flex items-center gap-2">
+            <button className="btn-elegant inline-flex items-center gap-2">
               Subscribe Now
               <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
             </button>
