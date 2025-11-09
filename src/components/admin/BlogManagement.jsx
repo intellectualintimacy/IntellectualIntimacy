@@ -25,6 +25,7 @@ function BlogModal({ blog, onClose, onSave }) {
     read_time_minutes: 5
   });
   const [tagInput, setTagInput] = useState('');
+  const [contentRef, setContentRef] = useState(null);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -90,6 +91,40 @@ function BlogModal({ blog, onClose, onSave }) {
       tags: prev.tags.filter(t => t !== tag)
     }));
   };
+
+  // Rich text formatting functions
+  const insertFormatting = (before, after = '') => {
+    if (!contentRef) return;
+    
+    const start = contentRef.selectionStart;
+    const end = contentRef.selectionEnd;
+    const selectedText = form.content.substring(start, end);
+    const beforeText = form.content.substring(0, start);
+    const afterText = form.content.substring(end);
+    
+    const newContent = beforeText + before + selectedText + after + afterText;
+    const newCursorPos = start + before.length + selectedText.length + after.length;
+    
+    setForm(prev => ({ ...prev, content: newContent }));
+    
+    setTimeout(() => {
+      contentRef.focus();
+      contentRef.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
+  const formatBold = () => insertFormatting('**', '**');
+  const formatItalic = () => insertFormatting('*', '*');
+  const formatHeading = (level) => {
+    const prefix = '#'.repeat(level) + ' ';
+    insertFormatting(prefix);
+  };
+  const formatLink = () => insertFormatting('[', '](url)');
+  const formatList = () => insertFormatting('- ');
+  const formatNumberedList = () => insertFormatting('1. ');
+  const formatQuote = () => insertFormatting('> ');
+  const formatCode = () => insertFormatting('`', '`');
+  const formatCodeBlock = () => insertFormatting('```\n', '\n```');
 
   const sendNewsletterNotification = async (blogData) => {
     setSendingNotification(true);
@@ -307,17 +342,119 @@ function BlogModal({ blog, onClose, onSave }) {
             />
           </div>
 
-          {/* Content */}
+          {/* Content with Rich Text Toolbar */}
           <div>
             <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Content *</label>
+            
+            {/* Formatting Toolbar */}
+            <div className="flex flex-wrap gap-1 p-2 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 mb-2">
+              <button
+                type="button"
+                onClick={() => formatHeading(1)}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold"
+                title="Heading 1"
+              >
+                H1
+              </button>
+              <button
+                type="button"
+                onClick={() => formatHeading(2)}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold"
+                title="Heading 2"
+              >
+                H2
+              </button>
+              <button
+                type="button"
+                onClick={() => formatHeading(3)}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold"
+                title="Heading 3"
+              >
+                H3
+              </button>
+              <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
+              <button
+                type="button"
+                onClick={formatBold}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-bold"
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={formatItalic}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm italic"
+                title="Italic"
+              >
+                I
+              </button>
+              <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
+              <button
+                type="button"
+                onClick={formatLink}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
+                title="Insert Link"
+              >
+                Link
+              </button>
+              <button
+                type="button"
+                onClick={formatQuote}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
+                title="Quote"
+              >
+                "
+              </button>
+              <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
+              <button
+                type="button"
+                onClick={formatList}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
+                title="Bullet List"
+              >
+                • List
+              </button>
+              <button
+                type="button"
+                onClick={formatNumberedList}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
+                title="Numbered List"
+              >
+                1. List
+              </button>
+              <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
+              <button
+                type="button"
+                onClick={formatCode}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-mono"
+                title="Inline Code"
+              >
+                {'</>'}
+              </button>
+              <button
+                type="button"
+                onClick={formatCodeBlock}
+                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-mono"
+                title="Code Block"
+              >
+                {'```'}
+              </button>
+            </div>
+
             <textarea
+              ref={setContentRef}
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={12}
-              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors font-mono text-sm"
-              placeholder="Write your blog content here... (Markdown supported)"
+              rows={16}
+              className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors font-mono text-sm leading-relaxed"
+              placeholder="Write your blog content here... Use the toolbar above for formatting.&#10;&#10;Markdown Guide:&#10;# Heading 1&#10;## Heading 2&#10;### Heading 3&#10;**bold text**&#10;*italic text*&#10;[link text](url)&#10;- bullet list&#10;1. numbered list&#10;> quote&#10;`inline code`&#10;```code block```"
               required
             />
+            
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-2">
+              Markdown formatting supported. Use the toolbar buttons or type markdown syntax directly.
+            </p>
           </div>
 
           {/* Featured Image */}

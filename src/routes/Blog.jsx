@@ -6,6 +6,7 @@ import {
   X, ArrowLeft, Loader2
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { marked } from 'marked'
 
 export default function Blog() {
   const [loading, setLoading] = useState(true)
@@ -15,6 +16,16 @@ export default function Blog() {
   const [categories, setCategories] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+
+  // Configure marked options for better rendering
+  useEffect(() => {
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      headerIds: true,
+      mangle: false,
+    })
+  }, [])
 
   useEffect(() => {
     loadBlogs()
@@ -37,8 +48,7 @@ export default function Blog() {
 
       setBlogs(data || [])
       
-      // Extract unique categories
-      const uniqueCategories = ['All', ...new Set(data?.map(blog => blog.category) || [])]
+      const uniqueCategories = ['All', ...new Set(data?.map(blog => blog.category).filter(Boolean) || [])]
       setCategories(uniqueCategories)
     } catch (error) {
       console.error('Error loading blogs:', error)
@@ -50,12 +60,10 @@ export default function Blog() {
   const filterBlogs = () => {
     let filtered = blogs
 
-    // Filter by category
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(blog => blog.category === selectedCategory)
     }
 
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(blog =>
         blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,7 +78,6 @@ export default function Blog() {
   const openBlog = async (blog) => {
     setSelectedBlog(blog)
     
-    // Increment views
     try {
       await supabase
         .from('blogs')
@@ -93,6 +100,11 @@ export default function Blog() {
     })
   }
 
+  const parseMarkdown = (markdown) => {
+    if (!markdown) return ''
+    return marked.parse(markdown)
+  }
+
   const featuredBlogs = blogs.filter(blog => blog.is_featured).slice(0, 3)
 
   if (loading) {
@@ -108,7 +120,6 @@ export default function Blog() {
     return (
       <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900 pt-32 pb-20">
         <div className="max-w-4xl mx-auto px-8 lg:px-16">
-          {/* Back Button */}
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -119,7 +130,6 @@ export default function Blog() {
             Back to all posts
           </motion.button>
 
-          {/* Featured Image */}
           {selectedBlog.featured_image_url && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -134,7 +144,6 @@ export default function Blog() {
             </motion.div>
           )}
 
-          {/* Blog Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,9 +151,11 @@ export default function Blog() {
             className="mb-12"
           >
             <div className="flex items-center gap-3 mb-6 flex-wrap">
-              <span className="px-3 py-1 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-sm font-light">
-                {selectedBlog.category}
-              </span>
+              {selectedBlog.category && (
+                <span className="px-3 py-1 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-sm font-light">
+                  {selectedBlog.category}
+                </span>
+              )}
               <span className="flex items-center gap-2 text-stone-500 dark:text-stone-400 text-sm font-light">
                 <Calendar className="w-4 h-4" strokeWidth={1.5} />
                 {formatDate(selectedBlog.published_at)}
@@ -169,17 +180,16 @@ export default function Blog() {
               </p>
             )}
 
-            {/* Author */}
             <div className="flex items-center gap-4 pb-8 border-b border-stone-200 dark:border-stone-800">
               {selectedBlog.author_avatar_url ? (
                 <img
                   src={selectedBlog.author_avatar_url}
                   alt={selectedBlog.author_name}
-                  className="w-12 h-12"
+                  className="w-12 h-12 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-12 h-12 bg-stone-200 dark:bg-stone-700 flex items-center justify-center text-stone-700 dark:text-stone-300 font-light">
-                  {selectedBlog.author_name?.[0] || 'A'}
+                <div className="w-12 h-12 rounded-full bg-stone-200 dark:bg-stone-700 flex items-center justify-center text-stone-700 dark:text-stone-300 font-light text-xl">
+                  {selectedBlog.author_name?.[0]?.toUpperCase() || 'A'}
                 </div>
               )}
               <div>
@@ -193,21 +203,36 @@ export default function Blog() {
             </div>
           </motion.div>
 
-          {/* Blog Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="prose prose-stone dark:prose-invert prose-lg max-w-none mb-12"
+            className="mb-12"
           >
             <div 
-              dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
-              className="text-stone-700 dark:text-stone-300 leading-relaxed font-light [&>h2]:text-3xl [&>h2]:font-light [&>h2]:mt-12 [&>h2]:mb-6 [&>h3]:text-2xl [&>h3]:font-light [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:leading-relaxed [&>ul]:my-6 [&>ol]:my-6 [&>blockquote]:border-l-4 [&>blockquote]:border-stone-400 [&>blockquote]:pl-6 [&>blockquote]:italic"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(selectedBlog.content) }}
+              className="blog-content text-stone-700 dark:text-stone-300 leading-relaxed font-light 
+                [&>h1]:text-4xl [&>h1]:font-light [&>h1]:mt-12 [&>h1]:mb-6 [&>h1]:text-stone-900 [&>h1]:dark:text-stone-100
+                [&>h2]:text-3xl [&>h2]:font-light [&>h2]:mt-10 [&>h2]:mb-5 [&>h2]:text-stone-900 [&>h2]:dark:text-stone-100
+                [&>h3]:text-2xl [&>h3]:font-light [&>h3]:mt-8 [&>h3]:mb-4 [&>h3]:text-stone-900 [&>h3]:dark:text-stone-100
+                [&>h4]:text-xl [&>h4]:font-light [&>h4]:mt-6 [&>h4]:mb-3 [&>h4]:text-stone-900 [&>h4]:dark:text-stone-100
+                [&>p]:mb-6 [&>p]:leading-relaxed [&>p]:text-base
+                [&>ul]:my-6 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:space-y-2
+                [&>ol]:my-6 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:space-y-2
+                [&>li]:leading-relaxed
+                [&>blockquote]:border-l-4 [&>blockquote]:border-stone-400 [&>blockquote]:dark:border-stone-600 
+                [&>blockquote]:pl-6 [&>blockquote]:py-2 [&>blockquote]:my-6 [&>blockquote]:italic [&>blockquote]:text-stone-600 [&>blockquote]:dark:text-stone-400
+                [&>code]:bg-stone-100 [&>code]:dark:bg-stone-800 [&>code]:px-2 [&>code]:py-1 [&>code]:rounded [&>code]:text-sm [&>code]:font-mono [&>code]:text-stone-800 [&>code]:dark:text-stone-200
+                [&>pre]:bg-stone-100 [&>pre]:dark:bg-stone-800 [&>pre]:p-4 [&>pre]:rounded [&>pre]:overflow-x-auto [&>pre]:my-6
+                [&>pre>code]:bg-transparent [&>pre>code]:p-0 [&>pre>code]:text-sm
+                [&_a]:text-stone-900 [&_a]:dark:text-stone-100 [&_a]:underline [&_a]:hover:text-stone-600 [&_a]:dark:hover:text-stone-400 [&_a]:transition-colors
+                [&>img]:my-8 [&>img]:rounded [&>img]:w-full
+                [&_strong]:font-semibold [&_strong]:text-stone-900 [&_strong]:dark:text-stone-100
+                [&_em]:italic [&_em]:text-stone-700 [&_em]:dark:text-stone-300"
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
             />
           </motion.div>
 
-          {/* Tags */}
           {selectedBlog.tags && selectedBlog.tags.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -227,7 +252,6 @@ export default function Blog() {
             </motion.div>
           )}
 
-          {/* Share Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -250,7 +274,6 @@ export default function Blog() {
   // Blog List View
   return (
     <main className="pt-32">
-      {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900">
         <div className="max-w-4xl mx-auto px-8 lg:px-16 text-center">
           <motion.div
@@ -270,7 +293,6 @@ export default function Blog() {
         </div>
       </section>
 
-      {/* Featured Blogs */}
       {featuredBlogs.length > 0 && (
         <section className="py-20 bg-white dark:bg-stone-900">
           <div className="max-w-7xl mx-auto px-8 lg:px-16">
@@ -340,11 +362,9 @@ export default function Blog() {
         </section>
       )}
 
-      {/* Search & Filter */}
       <section className="py-12 bg-stone-50 dark:bg-stone-950">
         <div className="max-w-7xl mx-auto px-8 lg:px-16">
           <div className="flex flex-col md:flex-row gap-4 items-center">
-            {/* Search */}
             <div className="flex-1 relative w-full">
               <Search className="w-5 h-5 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={1.5} />
               <input
@@ -356,7 +376,6 @@ export default function Blog() {
               />
             </div>
 
-            {/* Category Filter */}
             <div className="flex gap-2 overflow-x-auto scrollbar-hide w-full md:w-auto">
               {categories.map((category) => (
                 <button
@@ -374,14 +393,12 @@ export default function Blog() {
             </div>
           </div>
 
-          {/* Results Count */}
           <p className="text-sm text-stone-500 dark:text-stone-400 font-light mt-4">
             {filteredBlogs.length} {filteredBlogs.length === 1 ? 'article' : 'articles'} found
           </p>
         </div>
       </section>
 
-      {/* Blog Grid */}
       <section className="py-20 bg-white dark:bg-stone-900">
         <div className="max-w-7xl mx-auto px-8 lg:px-16">
           {filteredBlogs.length === 0 ? (
@@ -449,7 +466,6 @@ export default function Blog() {
         </div>
       </section>
 
-      {/* Newsletter CTA */}
       <section className="py-20 bg-stone-50 dark:bg-stone-950">
         <div className="max-w-4xl mx-auto px-8 lg:px-16 text-center">
           <motion.div
