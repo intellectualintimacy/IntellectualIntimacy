@@ -3,11 +3,301 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Edit2, Trash2, Eye, EyeOff, Star, Send,
   X, Loader2, Upload, Calendar, User, Tag, Clock, TrendingUp,
-  FileText, Image as ImageIcon, Mail, CheckCircle, AlertCircle
+  FileText, Image as ImageIcon, Mail, CheckCircle, AlertCircle,
+  MessageCircle, Check, Pin
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
-// Blog Modal Component
+// Comments Modal Component
+function CommentsModal({ blog, onClose }) {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0
+  });
+
+  useEffect(() => {
+    loadComments();
+  }, [blog.id]);
+
+  const loadComments = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('blog_comments')
+        .select('*')
+        .eq('blog_id', blog.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Organize into parent-child structure
+      const commentMap = {};
+      const rootComments = [];
+
+      data?.forEach(comment => {
+        commentMap[comment.id] = { ...comment, replies: [] };
+      });
+
+      data?.forEach(comment => {
+        if (comment.parent_comment_id && commentMap[comment.parent_comment_id]) {
+          commentMap[comment.parent_comment_id].replies.push(commentMap[comment.id]);
+        } else {
+          rootComments.push(commentMap[comment.id]);
+        }
+      });
+
+      setComments(rootComments);
+
+      // Calculate stats
+      const allCommentsFlat = data || [];
+      setStats({
+        total: allCommentsFlat.length,
+        approved: allCommentsFlat.filter(c => c.is_approved).length,
+        pending: allCommentsFlat.filter(c => !c.is_approved).length
+      });
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const approveComment = async (commentId) => {
+    try {
+      const { error } = await supabase
+        .from('blog_comments')
+        .update({ is_approved: true })
+        .eq('id', commentId);
+
+      if (error) throw error;
+      loadComments();
+    } catch (error) {
+      console.error('Error approving comment:', error);
+      alert('Failed to approve comment');
+    }
+  };
+
+  const rejectComment = async (commentId) => {
+    try {
+      const { error } = await supabase
+        .from('blog_comments')
+        .update({ is_approved: false })
+        .eq('id', commentId);
+
+      if (error) throw error;
+      loadComments();
+    } catch (error) {
+      console.error('Error rejecting comment:', error);
+      alert('Failed to reject comment');
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    if (!confirm('Are you sure you want to permanently delete this comment?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('blog_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+      loadComments();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      alert('Failed to delete comment');
+    }
+  };
+
+  const togglePin = async (comment) => {
+    try {
+      const { error } = await supabase
+        .from('blog_comments')
+        .update({ is_pinned: !comment.is_pinned })
+        .eq('id', comment.id);
+
+      if (error) throw error;
+      loadComments();
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+      alert('Failed to toggle pin');
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const CommentItem = ({ comment, isReply = false }) => (
+    <div className={`${isReply ? 'ml-8 mt-3 border-l-2 border-stone-200 dark:border-stone-800 pl-4' : 'mb-4'}`}>
+      <div className={`p-4 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 ${
+        !comment.is_approved ? 'border-l-4 border-l-amber-500' : ''
+      }`}>
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-10 h-10 bg-stone-200 dark:bg-stone-700 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-stone-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="font-medium text-stone-900 dark:text-stone-100">
+                  {comment.user_name}
+                </span>
+                <span className="text-sm text-stone-500 dark:text-stone-400">
+                  {comment.user_email}
+                </span>
+                {!comment.is_approved && (
+                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs">
+                    Pending
+                  </span>
+                )}
+                {comment.is_pinned && (
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs">
+                    Pinned
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400 mb-2">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {formatDate(comment.created_at)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3 h-3" />
+                  {comment.likes_count || 0} likes
+                </span>
+              </div>
+              <p className="text-stone-700 dark:text-stone-300 leading-relaxed text-sm">
+                {comment.comment_text}
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-1 flex-shrink-0">
+            {!comment.is_approved ? (
+              <button
+                onClick={() => approveComment(comment.id)}
+                className="p-2 hover:bg-green-100 dark:hover:bg-green-900/20 transition-colors"
+                title="Approve"
+              >
+                <Check className="w-4 h-4 text-green-600" />
+              </button>
+            ) : (
+              <button
+                onClick={() => rejectComment(comment.id)}
+                className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/20 transition-colors"
+                title="Unapprove"
+              >
+                <X className="w-4 h-4 text-amber-600" />
+              </button>
+            )}
+            <button
+              onClick={() => togglePin(comment)}
+              className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors"
+              title={comment.is_pinned ? 'Unpin' : 'Pin'}
+            >
+              <Pin className={`w-4 h-4 ${comment.is_pinned ? 'text-blue-600' : 'text-stone-400'}`} />
+            </button>
+            <button
+              onClick={() => deleteComment(comment.id)}
+              className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
+          </div>
+        </div>
+
+        {/* Replies */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {comment.replies.map(reply => (
+              <CommentItem key={reply.id} comment={reply} isReply={true} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-stone-900 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+      >
+        {/* Header */}
+        <div className="p-6 border-b border-stone-200 dark:border-stone-800 sticky top-0 bg-white dark:bg-stone-900 z-10">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="text-2xl font-light mb-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
+                Comments
+              </h3>
+              <p className="text-stone-600 dark:text-stone-400 text-sm">
+                {blog.title}
+              </p>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
+              <div className="text-2xl font-light text-stone-900 dark:text-stone-100">{stats.total}</div>
+              <div className="text-xs text-stone-500">Total</div>
+            </div>
+            <div className="text-center p-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
+              <div className="text-2xl font-light text-green-600">{stats.approved}</div>
+              <div className="text-xs text-stone-500">Approved</div>
+            </div>
+            <div className="text-center p-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
+              <div className="text-2xl font-light text-amber-600">{stats.pending}</div>
+              <div className="text-xs text-stone-500">Pending</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Comments List */}
+        <div className="p-6">
+          {loading ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-stone-400" />
+              <p className="text-stone-600 dark:text-stone-400">Loading comments...</p>
+            </div>
+          ) : comments.length === 0 ? (
+            <div className="text-center py-12">
+              <MessageCircle className="w-16 h-16 mx-auto mb-4 text-stone-300 dark:text-stone-700" strokeWidth={1} />
+              <p className="text-stone-600 dark:text-stone-400">No comments yet</p>
+              <p className="text-sm text-stone-500 mt-1">Be the first to comment on this post</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {comments.map(comment => (
+                <CommentItem key={comment.id} comment={comment} />
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// Blog Modal Component (existing code - keeping it the same)
 function BlogModal({ blog, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -27,7 +317,6 @@ function BlogModal({ blog, onClose, onSave }) {
   const [tagInput, setTagInput] = useState('');
   const [contentRef, setContentRef] = useState(null);
 
-  // Auto-generate slug from title
   useEffect(() => {
     if (!blog && form.title) {
       const slug = form.title
@@ -38,7 +327,6 @@ function BlogModal({ blog, onClose, onSave }) {
     }
   }, [form.title, blog]);
 
-  // Calculate read time based on content
   useEffect(() => {
     if (form.content) {
       const words = form.content.split(/\s+/).length;
@@ -54,7 +342,7 @@ function BlogModal({ blog, onClose, onSave }) {
       setUploading(true);
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-      const filePath = `blog-images/${fileName}`;
+      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('blog-images')
@@ -92,7 +380,6 @@ function BlogModal({ blog, onClose, onSave }) {
     }));
   };
 
-  // Rich text formatting functions
   const insertFormatting = (before, after = '') => {
     if (!contentRef) return;
     
@@ -115,10 +402,7 @@ function BlogModal({ blog, onClose, onSave }) {
 
   const formatBold = () => insertFormatting('**', '**');
   const formatItalic = () => insertFormatting('*', '*');
-  const formatHeading = (level) => {
-    const prefix = '#'.repeat(level) + ' ';
-    insertFormatting(prefix);
-  };
+  const formatHeading = (level) => insertFormatting('#'.repeat(level) + ' ');
   const formatLink = () => insertFormatting('[', '](url)');
   const formatList = () => insertFormatting('- ');
   const formatNumberedList = () => insertFormatting('1. ');
@@ -242,7 +526,6 @@ function BlogModal({ blog, onClose, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title & Slug */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Title *</label>
@@ -267,7 +550,6 @@ function BlogModal({ blog, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Category & Read Time */}
           <div className="grid md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Category</label>
@@ -291,7 +573,6 @@ function BlogModal({ blog, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Tags */}
           <div>
             <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Tags</label>
             <div className="flex gap-2 mb-2">
@@ -330,7 +611,6 @@ function BlogModal({ blog, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Excerpt */}
           <div>
             <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Excerpt</label>
             <textarea
@@ -342,104 +622,25 @@ function BlogModal({ blog, onClose, onSave }) {
             />
           </div>
 
-          {/* Content with Rich Text Toolbar */}
           <div>
             <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Content *</label>
             
-            {/* Formatting Toolbar */}
             <div className="flex flex-wrap gap-1 p-2 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 mb-2">
-              <button
-                type="button"
-                onClick={() => formatHeading(1)}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold"
-                title="Heading 1"
-              >
-                H1
-              </button>
-              <button
-                type="button"
-                onClick={() => formatHeading(2)}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold"
-                title="Heading 2"
-              >
-                H2
-              </button>
-              <button
-                type="button"
-                onClick={() => formatHeading(3)}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold"
-                title="Heading 3"
-              >
-                H3
-              </button>
+              <button type="button" onClick={() => formatHeading(1)} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold" title="Heading 1">H1</button>
+              <button type="button" onClick={() => formatHeading(2)} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold" title="Heading 2">H2</button>
+              <button type="button" onClick={() => formatHeading(3)} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-semibold" title="Heading 3">H3</button>
               <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
-              <button
-                type="button"
-                onClick={formatBold}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-bold"
-                title="Bold"
-              >
-                B
-              </button>
-              <button
-                type="button"
-                onClick={formatItalic}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm italic"
-                title="Italic"
-              >
-                I
-              </button>
+              <button type="button" onClick={formatBold} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-bold" title="Bold">B</button>
+              <button type="button" onClick={formatItalic} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm italic" title="Italic">I</button>
               <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
-              <button
-                type="button"
-                onClick={formatLink}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
-                title="Insert Link"
-              >
-                Link
-              </button>
-              <button
-                type="button"
-                onClick={formatQuote}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
-                title="Quote"
-              >
-                "
-              </button>
+              <button type="button" onClick={formatLink} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm" title="Insert Link">Link</button>
+              <button type="button" onClick={formatQuote} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm" title="Quote">"</button>
               <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
-              <button
-                type="button"
-                onClick={formatList}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
-                title="Bullet List"
-              >
-                • List
-              </button>
-              <button
-                type="button"
-                onClick={formatNumberedList}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm"
-                title="Numbered List"
-              >
-                1. List
-              </button>
+              <button type="button" onClick={formatList} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm" title="Bullet List">• List</button>
+              <button type="button" onClick={formatNumberedList} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm" title="Numbered List">1. List</button>
               <div className="w-px bg-stone-300 dark:bg-stone-700 mx-1"></div>
-              <button
-                type="button"
-                onClick={formatCode}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-mono"
-                title="Inline Code"
-              >
-                {'</>'}
-              </button>
-              <button
-                type="button"
-                onClick={formatCodeBlock}
-                className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-mono"
-                title="Code Block"
-              >
-                {'```'}
-              </button>
+              <button type="button" onClick={formatCode} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-mono" title="Inline Code">{'</>'}  </button>
+              <button type="button" onClick={formatCodeBlock} className="px-3 py-1.5 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors text-sm font-mono" title="Code Block">{'```'}</button>
             </div>
 
             <textarea
@@ -448,7 +649,7 @@ function BlogModal({ blog, onClose, onSave }) {
               onChange={(e) => setForm({ ...form, content: e.target.value })}
               rows={16}
               className="w-full px-4 py-3 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors font-mono text-sm leading-relaxed"
-              placeholder="Write your blog content here... Use the toolbar above for formatting.&#10;&#10;Markdown Guide:&#10;# Heading 1&#10;## Heading 2&#10;### Heading 3&#10;**bold text**&#10;*italic text*&#10;[link text](url)&#10;- bullet list&#10;1. numbered list&#10;> quote&#10;`inline code`&#10;```code block```"
+              placeholder="Write your blog content here... Use the toolbar above for formatting."
               required
             />
             
@@ -457,7 +658,6 @@ function BlogModal({ blog, onClose, onSave }) {
             </p>
           </div>
 
-          {/* Featured Image */}
           <div>
             <label className="block text-sm font-medium mb-2 text-stone-700 dark:text-stone-300">Featured Image</label>
             <div className="flex items-center gap-4 mb-3">
@@ -479,7 +679,6 @@ function BlogModal({ blog, onClose, onSave }) {
             )}
           </div>
 
-          {/* Publish Options */}
           <div className="flex items-center gap-6 p-4 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -501,7 +700,6 @@ function BlogModal({ blog, onClose, onSave }) {
             </label>
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t border-stone-200 dark:border-stone-800">
             <button
               type="button"
@@ -533,6 +731,9 @@ export default function BlogManagement() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [selectedBlogForComments, setSelectedBlogForComments] = useState(null);
+  const [blogCommentCounts, setBlogCommentCounts] = useState({});
   const [stats, setStats] = useState({
     total: 0,
     published: 0,
@@ -543,6 +744,7 @@ export default function BlogManagement() {
   useEffect(() => {
     fetchBlogs();
     fetchStats();
+    fetchCommentCounts();
   }, []);
 
   const fetchBlogs = async () => {
@@ -578,6 +780,25 @@ export default function BlogManagement() {
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
+    }
+  };
+
+  const fetchCommentCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_comments')
+        .select('blog_id');
+
+      if (error) throw error;
+
+      const counts = {};
+      data?.forEach(comment => {
+        counts[comment.blog_id] = (counts[comment.blog_id] || 0) + 1;
+      });
+
+      setBlogCommentCounts(counts);
+    } catch (err) {
+      console.error('Error fetching comment counts:', err);
     }
   };
 
@@ -631,6 +852,11 @@ export default function BlogManagement() {
       console.error('Toggle featured error:', err);
       alert('Failed to update featured status');
     }
+  };
+
+  const openCommentsModal = (blog) => {
+    setSelectedBlogForComments(blog);
+    setShowCommentsModal(true);
   };
 
   const filteredBlogs = blogs.filter(blog => {
@@ -835,6 +1061,18 @@ export default function BlogManagement() {
                       {/* Actions */}
                       <div className="flex gap-2 flex-shrink-0">
                         <button
+                          onClick={() => openCommentsModal(blog)}
+                          className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors relative"
+                          title="View Comments"
+                        >
+                          <MessageCircle className="w-5 h-5 text-purple-600" />
+                          {blogCommentCounts[blog.id] > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 text-white text-xs flex items-center justify-center">
+                              {blogCommentCounts[blog.id]}
+                            </span>
+                          )}
+                        </button>
+                        <button
                           onClick={() => togglePublish(blog)}
                           className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors"
                           title={blog.is_published ? 'Unpublish' : 'Publish'}
@@ -879,7 +1117,7 @@ export default function BlogManagement() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Blog Modal */}
       <AnimatePresence>
         {showModal && (
           <BlogModal
@@ -893,6 +1131,20 @@ export default function BlogManagement() {
               setSelectedBlog(null);
               fetchBlogs();
               fetchStats();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Comments Modal */}
+      <AnimatePresence>
+        {showCommentsModal && selectedBlogForComments && (
+          <CommentsModal
+            blog={selectedBlogForComments}
+            onClose={() => {
+              setShowCommentsModal(false);
+              setSelectedBlogForComments(null);
+              fetchCommentCounts(); // Refresh comment counts
             }}
           />
         )}
