@@ -13,6 +13,7 @@ export default function BlogComments({ blogId }) {
     email: '',
     text: ''
   })
+  const [replyText, setReplyText] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
@@ -60,15 +61,28 @@ export default function BlogComments({ blogId }) {
   const handleSubmit = async (e, parentId = null) => {
     e.preventDefault()
     
-    if (!newComment.name || !newComment.email || !newComment.text) {
-      alert('Please fill in all fields')
-      return
-    }
+    // For main comment
+    if (!parentId) {
+      if (!newComment.name || !newComment.email || !newComment.text) {
+        alert('Please fill in all fields')
+        return
+      }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(newComment.email)) {
-      alert('Please enter a valid email address')
-      return
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(newComment.email)) {
+        alert('Please enter a valid email address')
+        return
+      }
+    } else {
+      // For reply
+      if (!newComment.name || !newComment.email) {
+        alert('Please enter your name and email in the main comment form first')
+        return
+      }
+      if (!replyText.trim()) {
+        alert('Please write your reply')
+        return
+      }
     }
 
     try {
@@ -80,7 +94,7 @@ export default function BlogComments({ blogId }) {
           blog_id: blogId,
           user_name: newComment.name,
           user_email: newComment.email,
-          comment_text: newComment.text,
+          comment_text: parentId ? replyText : newComment.text,
           parent_comment_id: parentId,
           is_approved: false
         }])
@@ -88,8 +102,14 @@ export default function BlogComments({ blogId }) {
 
       if (error) throw error
 
-      setNewComment({ name: '', email: '', text: '' })
-      setReplyingTo(null)
+      // Clear the appropriate field
+      if (parentId) {
+        setReplyText('')
+        setReplyingTo(null)
+      } else {
+        setNewComment({ ...newComment, text: '' })
+      }
+      
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (error) {
@@ -112,7 +132,7 @@ export default function BlogComments({ blogId }) {
         .select('id')
         .eq('comment_id', commentId)
         .eq('user_email', newComment.email)
-        .single()
+        .maybeSingle() // FIX: safer than .single() to prevent throw when no row found
 
       if (existingLike) {
         await supabase
@@ -152,6 +172,16 @@ export default function BlogComments({ blogId }) {
     })
   }
 
+  const handleReplyClick = (commentId) => {
+    if (replyingTo === commentId) {
+      setReplyingTo(null)
+      setReplyText('')
+    } else {
+      setReplyingTo(commentId)
+      setReplyText('')
+    }
+  }
+
   const CommentItem = ({ comment, isReply = false }) => (
     <div className={isReply ? 'mt-4' : 'mb-6'}>
       <div className={`flex gap-3 md:gap-4 p-4 md:p-6 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 ${
@@ -179,16 +209,6 @@ export default function BlogComments({ blogId }) {
             <span className="text-xs md:text-sm text-stone-500 dark:text-stone-400">
               {formatDate(comment.created_at)}
             </span>
-            {comment.is_pinned && (
-              <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                Pinned
-              </span>
-            )}
-            {isReply && (
-              <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
-                Reply
-              </span>
-            )}
           </div>
 
           <p className="text-stone-700 dark:text-stone-300 leading-relaxed mb-3 text-sm md:text-base">
@@ -206,11 +226,11 @@ export default function BlogComments({ blogId }) {
 
             {!isReply && (
               <button
-                onClick={() => setReplyingTo(comment.id === replyingTo ? null : comment.id)}
+                onClick={() => handleReplyClick(comment.id)}
                 className="flex items-center gap-1 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
               >
                 <Reply className="w-3 h-3 md:w-4 md:h-4" strokeWidth={1.5} />
-                Reply
+                {replyingTo === comment.id ? 'Cancel' : 'Reply'}
               </button>
             )}
           </div>
@@ -224,8 +244,8 @@ export default function BlogComments({ blogId }) {
             >
               <div className="space-y-3">
                 <textarea
-                  value={newComment.text}
-                  onChange={(e) => setNewComment({ ...newComment, text: e.target.value })}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Write your reply..."
                   rows={4}
                   className="w-full px-4 py-3 md:py-3 text-base md:text-base border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors"
@@ -234,7 +254,7 @@ export default function BlogComments({ blogId }) {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setReplyingTo(null)}
+                    onClick={() => handleReplyClick(comment.id)}
                     className="px-4 py-2.5 md:py-2 text-sm md:text-base border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                   >
                     Cancel
@@ -255,7 +275,7 @@ export default function BlogComments({ blogId }) {
         </div>
       </div>
 
-      {/* Nested Replies Container */}
+      {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <div className="ml-4 md:ml-12 mt-4 pl-4 md:pl-6 border-l-2 border-stone-200 dark:border-stone-800">
           <div className="space-y-4">
@@ -277,6 +297,7 @@ export default function BlogComments({ blogId }) {
         </h2>
       </div>
 
+      {/* Success Modal */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
@@ -293,7 +314,7 @@ export default function BlogComments({ blogId }) {
         )}
       </AnimatePresence>
 
-      {/* Comment Form - Larger on Mobile */}
+      {/* Comment Form */}
       <div className="mb-12 p-4 md:p-6 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
         <h3 className="text-xl md:text-2xl font-light mb-6" style={{ fontFamily: 'Crimson Pro, serif' }}>
           Leave a Comment
@@ -380,12 +401,12 @@ export default function BlogComments({ blogId }) {
       ) : comments.length === 0 ? (
         <div className="text-center py-12">
           <MessageCircle className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-stone-300 dark:text-stone-700" strokeWidth={1} />
-          <p className="text-stone-600 dark:text-stone-400 text-sm md:text-base">
-            No comments yet. Be the first to share your thoughts!
+                    <p className="text-stone-600 dark:text-stone-400 text-sm md:text-base">
+            No comments yet. Be the first to share your thoughts.
           </p>
         </div>
       ) : (
-        <div>
+        <div className="space-y-6 md:space-y-8">
           {comments.map(comment => (
             <CommentItem key={comment.id} comment={comment} />
           ))}
@@ -394,3 +415,4 @@ export default function BlogComments({ blogId }) {
     </div>
   )
 }
+
