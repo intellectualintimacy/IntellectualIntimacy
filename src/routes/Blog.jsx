@@ -5,6 +5,7 @@ import {
   ChevronRight, BookOpen, TrendingUp, Heart, Share2,
   X, ArrowLeft, Loader2
 } from 'lucide-react'
+import { marked } from 'marked';
 import { supabase } from '../../lib/supabase'
 
 export default function Blog() {
@@ -85,6 +86,8 @@ export default function Blog() {
 
   const closeBlog = () => {
     setSelectedBlog(null)
+    setShowShareMenu(false)
+    setLinkCopied(false)
   }
 
   const formatDate = (dateString) => {
@@ -93,6 +96,11 @@ export default function Blog() {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const parseMarkdown = (markdown) => {
+    if (!markdown) return ''
+    return marked.parse(markdown)
   }
 
   const shareOnPlatform = (platform) => {
@@ -241,15 +249,33 @@ export default function Blog() {
           </motion.div>
 
           {/* Blog Content */}
+          {/* Blog Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="prose prose-stone dark:prose-invert prose-lg max-w-none mb-12"
+            className="mb-12"
           >
             <div 
-              dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
-              className="text-stone-700 dark:text-stone-300 leading-relaxed font-light [&>h2]:text-3xl [&>h2]:font-light [&>h2]:mt-12 [&>h2]:mb-6 [&>h3]:text-2xl [&>h3]:font-light [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:leading-relaxed [&>ul]:my-6 [&>ol]:my-6 [&>blockquote]:border-l-4 [&>blockquote]:border-stone-400 [&>blockquote]:pl-6 [&>blockquote]:italic"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(selectedBlog.content) }}
+              className="blog-content text-stone-700 dark:text-stone-300 leading-relaxed font-light 
+                [&>h1]:text-4xl [&>h1]:font-light [&>h1]:mt-12 [&>h1]:mb-6 [&>h1]:text-stone-900 [&>h1]:dark:text-stone-100
+                [&>h2]:text-3xl [&>h2]:font-light [&>h2]:mt-10 [&>h2]:mb-5 [&>h2]:text-stone-900 [&>h2]:dark:text-stone-100
+                [&>h3]:text-2xl [&>h3]:font-light [&>h3]:mt-8 [&>h3]:mb-4 [&>h3]:text-stone-900 [&>h3]:dark:text-stone-100
+                [&>h4]:text-xl [&>h4]:font-light [&>h4]:mt-6 [&>h4]:mb-3 [&>h4]:text-stone-900 [&>h4]:dark:text-stone-100
+                [&>p]:mb-6 [&>p]:leading-relaxed [&>p]:text-base
+                [&>ul]:my-6 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:space-y-2
+                [&>ol]:my-6 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:space-y-2
+                [&>li]:leading-relaxed
+                [&>blockquote]:border-l-4 [&>blockquote]:border-stone-400 [&>blockquote]:dark:border-stone-600 
+                [&>blockquote]:pl-6 [&>blockquote]:py-2 [&>blockquote]:my-6 [&>blockquote]:italic [&>blockquote]:text-stone-600 [&>blockquote]:dark:text-stone-400
+                [&>code]:bg-stone-100 [&>code]:dark:bg-stone-800 [&>code]:px-2 [&>code]:py-1 [&>code]:rounded [&>code]:text-sm [&>code]:font-mono [&>code]:text-stone-800 [&>code]:dark:text-stone-200
+                [&>pre]:bg-stone-100 [&>pre]:dark:bg-stone-800 [&>pre]:p-4 [&>pre]:rounded [&>pre]:overflow-x-auto [&>pre]:my-6
+                [&>pre>code]:bg-transparent [&>pre>code]:p-0 [&>pre>code]:text-sm
+                [&_a]:text-stone-900 [&_a]:dark:text-stone-100 [&_a]:underline [&_a]:hover:text-stone-600 [&_a]:dark:hover:text-stone-400 [&_a]:transition-colors
+                [&>img]:my-8 [&>img]:rounded [&>img]:w-full
+                [&_strong]:font-semibold [&_strong]:text-stone-900 [&_strong]:dark:text-stone-100
+                [&_em]:italic [&_em]:text-stone-700 [&_em]:dark:text-stone-300"
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
             />
           </motion.div>
