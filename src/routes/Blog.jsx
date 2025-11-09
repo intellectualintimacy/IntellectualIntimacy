@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import BlogComments from '../components/blog/BlogComments'
 import { 
   Calendar, Clock, User, Tag, Eye, Search, Filter,
   ChevronRight, BookOpen, TrendingUp, Heart, Share2,
@@ -396,6 +397,7 @@ export default function Blog() {
               )}
             </AnimatePresence>
           </motion.div>
+          <BlogComments blogId={selectedBlog.id} />
         </div>
       </main>
     )
