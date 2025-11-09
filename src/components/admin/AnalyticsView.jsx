@@ -563,9 +563,13 @@ export default function AnalyticsView() {
                 <span className="text-sm text-stone-600 dark:text-stone-400 font-light">Pending</span>
                 <span className="text-sm font-light text-stone-900 dark:text-stone-50">{analytics.conversion.pending}</span>
               </div>
-              <div 
-                className="h-12 bg-gradient-to-r from-yellow-500 to-amber-600 flex items-center justify-center text-white font-light" style={{ fontFamily: 'Crimson Pro, serif' }}
-                style={{ width: `${(analytics.conversion.pending / (analytics.overview.totalReservations || 1)) * 100}%` }}
+              <div
+                className="h-12 bg-gradient-to-r from-yellow-500 to-amber-600 flex items-center justify-center text-white font-light"
+                // Styles combined into one object
+                style={{
+                  fontFamily: 'Crimson Pro, serif',
+                  width: `${(analytics.conversion.pending / (analytics.overview.totalReservations || 1)) * 100}%`
+                }}
               >
                 {((analytics.conversion.pending / (analytics.overview.totalReservations || 1)) * 100).toFixed(0)}%
               </div>
@@ -575,12 +579,16 @@ export default function AnalyticsView() {
                 <span className="text-sm text-stone-600 dark:text-stone-400 font-light">Cancelled</span>
                 <span className="text-sm font-light text-stone-900 dark:text-stone-50">{analytics.conversion.cancelled}</span>
               </div>
-              <div 
-                className="h-10 bg-gradient-to-r from-red-500 to-rose-600 flex items-center justify-center text-white font-light text-sm" style={{ fontFamily: 'Crimson Pro, serif' }}
-                style={{ width: `${Math.max((analytics.conversion.cancelled / (analytics.overview.totalReservations || 1)) * 100, 5)}%` }}
-              >
-                {((analytics.conversion.cancelled / (analytics.overview.totalReservations || 1)) * 100).toFixed(0)}%
-              </div>
+<div
+                className="h-10 bg-gradient-to-r from-red-500 to-rose-600 flex items-center justify-center text-white font-light text-sm"
+                // ONLY ONE style PROP HERE, COMBINING BOTH PROPERTIES:
+                style={{
+                  fontFamily: 'Crimson Pro, serif',
+                  width: `${Math.max((analytics.conversion.cancelled / (analytics.overview.totalReservations || 1)) * 100, 5)}%`
+                }}
+              >
+                {((analytics.conversion.cancelled / (analytics.overview.totalReservations || 1)) * 100).toFixed(0)}%
+              </div>
             </div>
           </div>
         </motion.div>

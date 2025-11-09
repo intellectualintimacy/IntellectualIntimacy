@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Calendar, Clock, User, Tag, Eye, Search, Filter,
   ChevronRight, BookOpen, TrendingUp, Heart, Share2,
-  X, ArrowLeft, Loader2
+  X, ArrowLeft, Loader2, Copy, Check, Mail, MessageCircle
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { marked } from 'marked'
@@ -103,6 +103,55 @@ export default function Blog() {
   const parseMarkdown = (markdown) => {
     if (!markdown) return ''
     return marked.parse(markdown)
+  }
+
+  const [showShareMenu, setShowShareMenu] = useState(false)
+
+  const shareOnPlatform = (platform, blog) => {
+    const url = window.location.href
+    const title = blog.title
+    const text = blog.excerpt || blog.title
+
+    const shareUrls = {
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
+      reddit: `https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`,
+      email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text + '\n\n' + url)}`
+    }
+
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copied to clipboard!')
+      }).catch(() => {
+        alert('Failed to copy link')
+      })
+      return
+    }
+
+    if (shareUrls[platform]) {
+      window.open(shareUrls[platform], '_blank', 'width=600,height=400')
+    }
+  }
+
+  const nativeShare = async (blog) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: blog.title,
+          text: blog.excerpt || blog.title,
+          url: window.location.href
+        })
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err)
+        }
+      }
+    } else {
+      setShowShareMenu(!showShareMenu)
+    }
   }
 
   const featuredBlogs = blogs.filter(blog => blog.is_featured).slice(0, 3)
