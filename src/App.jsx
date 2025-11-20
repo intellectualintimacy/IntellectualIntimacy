@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Navigation from "./components/layout/Navigation";
 import Footer from "./components/layout/Footer";
@@ -8,6 +9,7 @@ import Events from "./routes/Events";
 import Contact from "./routes/Contact";
 import Support from "./routes/Support";
 import Privacy from "./routes/Privacy";
+import CovenantCommitmentPage from './routes/CovenantCommitment';
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import MyTickets from "./routes/MyTickets";
@@ -37,27 +39,29 @@ function AppContent({ darkMode, setDarkMode }) {
     <div className="min-h-screen transition-colors duration-500 bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-white">
       {!hideLayout && <Navigation darkMode={darkMode} setDarkMode={setDarkMode} />}
       <ConnectionMonitor />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/my-tickets" element={<MyTickets />} />
-        <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
-        <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribe />} />
-        <Route path="/share-testimonial" element={<ShareTestimonial />} />
-        <Route path="/admin/events" element={<AdminDashboard />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/confirm-email" element={<ConfirmEmail />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/blog" element={<Blog />} />
-
-      </Routes>
+      <HelmetProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/my-tickets" element={<MyTickets />} />
+          <Route path="/newsletter/confirm" element={<NewsletterConfirm />} />
+          <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribe />} />
+          <Route path="/share-testimonial" element={<ShareTestimonial />} />
+          <Route path="/admin/events" element={<AdminDashboard />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/confirm-email" element={<ConfirmEmail />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/covenant-commitment" element={<CovenantCommitmentPage />} />
+          <Route path="/blog" element={<Blog />} />
+        </Routes>
+      </HelmetProvider>
 
       {!hideLayout && <Footer />}
     </div>

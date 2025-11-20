@@ -8,6 +8,7 @@ import CTASection from '../components/home/CTASection'
 import UpcomingEvents from '../components/home/UpcomingEvents'
 import NewsletterForm from '../components/home/Newsletter'
 import YouTubeModal from '../components/home/YouTubeModal'
+import SEO from '../components/common/SEO'
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false)
@@ -59,6 +60,13 @@ export default function Home() {
 
   return (
     <main>
+      <SEO 
+        title="Intellectual Intimacy - Deep Conversations, Meaningful Connections"
+        description="Join us for profound dialogues that foster genuine human connections through thoughtful conversation, philosophy, and shared inquiry. Build meaningful relationships through intellectual discourse."
+        keywords="intellectual intimacy, deep conversations, meaningful connections, philosophy discussions, human connection, dialogue community, thoughtful discussions, salon conversations, intellectual community"
+        url="https://intellectualintimacy.co.za"
+        image="https://intellectualintimacy.co.za/images/home-og.jpg"
+      />
       {/* YouTube Modal */}
       <YouTubeModal
         isOpen={showModal}

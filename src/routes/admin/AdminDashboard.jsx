@@ -1,4 +1,4 @@
-// src/routes/admin/AdminDashboard.jsx
+import SEO from '../components/common/SEO'
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -65,9 +65,18 @@ export default function AdminDashboard() {
   }
 
   return (
+    <>
+    <SEO 
+      title="Intellectual Intimacy - Deep Conversations, Meaningful Connections"
+      description="Join us for profound dialogues that foster genuine human connections through thoughtful conversation, philosophy, and shared inquiry. Build meaningful relationships through intellectual discourse."
+      keywords="intellectual intimacy, deep conversations, meaningful connections, philosophy discussions, human connection, dialogue community, thoughtful discussions, salon conversations, intellectual community"
+      url="https://intellectualintimacy.co.za"
+      image="https://intellectualintimacy.co.za/images/admin-og.jpg"
+    />
     <AdminLayout 
       currentView={currentView} 
       setCurrentView={setCurrentView} 
     />
+    </>
   );
 }

@@ -14,6 +14,7 @@ import {
   Sparkles,
   Play,
 } from "lucide-react";
+import SEO from '../components/common/SEO'
 
 /**
  * SUPPORT PAGE (full): Maintains all original layout & content.
@@ -270,6 +271,13 @@ export default function Support() {
 
   return (
     <main className="pt-32">
+      <SEO 
+        title="Intellectual Intimacy - Deep Conversations, Meaningful Connections"
+        description="Join us for profound dialogues that foster genuine human connections through thoughtful conversation, philosophy, and shared inquiry. Build meaningful relationships through intellectual discourse."
+        keywords="intellectual intimacy, deep conversations, meaningful connections, philosophy discussions, human connection, dialogue community, thoughtful discussions, salon conversations, intellectual community"
+        url="https://intellectualintimacy.co.za"
+        image="https://intellectualintimacy.co.za/images/support-og.jpg"
+      />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-amber-50 to-white dark:from-stone-950 dark:to-stone-900 relative overflow-hidden">
         <div className="absolute inset-0 texture-dots opacity-20"></div>

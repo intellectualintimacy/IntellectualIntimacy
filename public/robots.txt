@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin/events
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /verification
+
+# Sitemap location
+Sitemap: https://intellectualintimacy.co.za/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1

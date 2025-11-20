@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { marked } from 'marked'
 import { supabase } from '../../lib/supabase'
+import SEO from '../components/common/SEO'
 
 const parseMarkdown = (markdown) => {
   if (!markdown) return ''
@@ -279,6 +280,13 @@ function BlogComments({ blogId }) {
   )
 
   return (
+    <>
+    <SEO 
+      title="Blog - Insights on Human Connection | Intellectual Intimacy"
+      description="Explore articles on meaningful dialogue, philosophy, and building deeper human connections through intellectual discourse and thoughtful conversation."
+      keywords="philosophy blog, conversation articles, human connection blog, intellectual discussions, meaningful dialogue, social issues"
+      url="https://intellectualintimacy.co.za/blog"
+    />
     <div className="py-12">
       <div className="flex items-center gap-3 mb-8">
         <MessageCircle className="w-6 h-6 text-stone-600 dark:text-stone-400" strokeWidth={1.5} />
@@ -396,6 +404,7 @@ function BlogComments({ blogId }) {
         </div>
       )}
     </div>
+    </>
   )
 }
 

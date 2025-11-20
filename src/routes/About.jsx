@@ -1,9 +1,17 @@
 import { motion } from 'framer-motion'
 import { Target, Users, Lightbulb, Heart } from 'lucide-react'
+import SEO from '../components/common/SEO'
 
 export default function About() {
   return (
     <main className="pt-32">
+      <SEO 
+        title="Intellectual Intimacy - Deep Conversations, Meaningful Connections"
+        description="Join us for profound dialogues that foster genuine human connections through thoughtful conversation, philosophy, and shared inquiry. Build meaningful relationships through intellectual discourse."
+        keywords="intellectual intimacy, deep conversations, meaningful connections, philosophy discussions, human connection, dialogue community, thoughtful discussions, salon conversations, intellectual community"
+        url="https://intellectualintimacy.co.za"
+        image="https://intellectualintimacy.co.za/images/about-og.jpg"
+      />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-stone-50 to-white dark:from-stone-950 dark:to-stone-900">
         <div className="max-w-4xl mx-auto px-8 lg:px-16 text-center">
